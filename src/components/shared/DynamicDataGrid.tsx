@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { DataGridProps } from "./DataGrid";
 
 const DataGridComponent = dynamic(

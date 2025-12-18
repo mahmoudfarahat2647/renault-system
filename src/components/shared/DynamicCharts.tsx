@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 
 const PieChartResolved = dynamic(() => import("recharts").then((mod) => mod.PieChart as any), { ssr: false, loading: () => <Skeleton className="h-full w-full rounded-full" /> }) as React.ComponentType<any>;
 const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie as any), { ssr: false }) as React.ComponentType<any>;
