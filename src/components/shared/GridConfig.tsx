@@ -108,14 +108,15 @@ export const getBaseColumns = (): ColDef<PendingRow>[] => [
         field: "id",
         checkboxSelection: true,
         headerCheckboxSelection: true,
-        width: 40,
-        maxWidth: 40,
+        width: 50,
+        maxWidth: 50,
         sortable: false,
         filter: false,
         resizable: false,
         pinned: "left",
         suppressMenu: true,
-        cellClass: "flex items-center justify-center", // Center checkbox
+        valueFormatter: () => "", // Hide the ID number
+        cellClass: "flex items-center justify-center",
     },
     {
         headerName: "ACTIONS",
