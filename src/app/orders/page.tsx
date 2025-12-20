@@ -362,17 +362,29 @@ export default function OrdersPage() {
 
     // Part validation logic
     const partValidationWarnings = useMemo(() => {
-        const warnings: Record<string, string> = {};
+        const warnings: Record<string, { type: 'mismatch' | 'duplicate', value: string }> = {};
         parts.forEach(part => {
             if (!part.partNumber) return;
-            // Search rowData (Main Sheet) for this part number
+
+            // 1. Check for duplicates (Same VIN + Same Part Number in Main Sheet)
+            const isDuplicate = rowData.some(r =>
+                r.vin === formData.vin &&
+                r.partNumber === part.partNumber
+            );
+
+            if (isDuplicate) {
+                warnings[part.id] = { type: 'duplicate', value: "The order already exists" };
+                return;
+            }
+
+            // 2. Check for name mismatches
             const existingPart = rowData.find(r => r.partNumber === part.partNumber);
             if (existingPart && existingPart.description.trim().toLowerCase() !== part.description.trim().toLowerCase()) {
-                warnings[part.id] = existingPart.description;
+                warnings[part.id] = { type: 'mismatch', value: existingPart.description };
             }
         });
         return warnings;
-    }, [parts, rowData]);
+    }, [parts, rowData, formData.vin]);
 
     const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
@@ -951,18 +963,22 @@ Example:
                                                                             <div className="flex items-center gap-1.5 text-red-400">
                                                                                 <AlertCircle className="h-3 w-3" />
                                                                                 <span className="text-[9px] font-bold uppercase tracking-tight">
-                                                                                    Existing Name: "{partValidationWarnings[part.id]}"
+                                                                                    {partValidationWarnings[part.id].type === 'duplicate'
+                                                                                        ? partValidationWarnings[part.id].value
+                                                                                        : `Existing Name: "${partValidationWarnings[part.id].value}"`}
                                                                                 </span>
                                                                             </div>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="icon"
-                                                                                className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-                                                                                onClick={() => handlePartChange(part.id, "description", partValidationWarnings[part.id])}
-                                                                                title="Apply existing name"
-                                                                            >
-                                                                                <CheckCircle2 className="h-3 w-3" />
-                                                                            </Button>
+                                                                            {partValidationWarnings[part.id].type === 'mismatch' && (
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="icon"
+                                                                                    className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+                                                                                    onClick={() => handlePartChange(part.id, "description", partValidationWarnings[part.id].value)}
+                                                                                    title="Apply existing name"
+                                                                                >
+                                                                                    <CheckCircle2 className="h-3 w-3" />
+                                                                                </Button>
+                                                                            )}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -1049,7 +1065,9 @@ Example:
                                                 <AlertCircle className="h-3.5 w-3.5 animate-pulse" />
                                                 <span className="text-[10px] font-black uppercase tracking-wider">
                                                     {Object.values(partValidationWarnings).length === 1
-                                                        ? `(name is "${Object.values(partValidationWarnings)[0]}")`
+                                                        ? (Object.values(partValidationWarnings)[0].type === 'duplicate'
+                                                            ? "The order already exists"
+                                                            : `(name is "${Object.values(partValidationWarnings)[0].value}")`)
                                                         : `(${Object.values(partValidationWarnings).length} Mismatched Names)`}
                                                 </span>
                                             </motion.div>
