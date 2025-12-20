@@ -76,6 +76,8 @@ export default function OrdersPage() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [isBulkMode, setIsBulkMode] = useState(false);
     const [bulkText, setBulkText] = useState("");
+    const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
+    const [personalBulkText, setPersonalBulkText] = useState("");
 
     // Form state
     const [formData, setFormData] = useState({
@@ -87,6 +89,8 @@ export default function OrdersPage() {
         repairSystem: "Mechanical",
         startWarranty: new Date().toISOString().split("T")[0],
         requester: "",
+        sabNumber: "",
+        acceptedBy: "",
     });
 
     const [parts, setParts] = useState<PartEntry[]>([{ id: generateId(), partNumber: "", description: "" }]);
@@ -125,6 +129,8 @@ export default function OrdersPage() {
                 repairSystem: first.repairSystem,
                 startWarranty: first.startWarranty,
                 requester: first.requester,
+                sabNumber: first.sabNumber || "",
+                acceptedBy: first.acceptedBy || "",
             });
 
             // Map selected rows to part rows in the modal.
@@ -145,15 +151,43 @@ export default function OrdersPage() {
                 model: "",
                 repairSystem: "Mechanical",
                 startWarranty: new Date().toISOString().split("T")[0],
-                requester: "",
+                sabNumber: "",
+                acceptedBy: "",
             });
             setParts([{ id: generateId(), partNumber: "", description: "" }]);
+            setIsBulkMode(false);
+            setBulkText("");
+            setIsPersonalBulkMode(false);
+            setPersonalBulkText("");
         }
         setIsModalOpen(true);
     };
 
     const handleAddPartRow = () => {
         setParts([...parts, { id: generateId(), partNumber: "", description: "" }]);
+    };
+
+    const handlePersonalBulkImport = () => {
+        if (!personalBulkText.trim()) return;
+
+        // Splits by tab or multiple spaces
+        const rowParts = personalBulkText.split(/\t|\s{4,}/).filter(Boolean);
+
+        if (rowParts.length > 0) {
+            setFormData(prev => ({
+                ...prev,
+                customerName: rowParts[0]?.trim() || prev.customerName,
+                vin: (rowParts[1]?.trim() || prev.vin).toUpperCase(),
+                mobile: rowParts[2]?.trim() || prev.mobile,
+                cntrRdg: rowParts[3]?.trim() || prev.cntrRdg,
+                sabNumber: rowParts[4]?.trim() || prev.sabNumber,
+                acceptedBy: rowParts[5]?.trim() || prev.acceptedBy,
+            }));
+
+            setPersonalBulkText("");
+            setIsPersonalBulkMode(false);
+            toast.success("Identity fields updated");
+        }
     };
 
     const handleBulkImport = () => {
@@ -272,6 +306,8 @@ export default function OrdersPage() {
                 trackingId: `ORD-${parts.length > 1 ? `${baseId}-${index + 1}` : baseId}`,
                 ...formData,
                 cntrRdg: parseInt(formData.cntrRdg) || 0,
+                sabNumber: formData.sabNumber,
+                acceptedBy: formData.acceptedBy,
                 partNumber: part.partNumber,
                 description: part.description,
                 parts: [part], // Store individual part for later edits
@@ -513,82 +549,170 @@ export default function OrdersPage() {
                             {/* Left Column: Metadata */}
                             <div className="col-span-12 lg:col-span-5 space-y-4">
                                 <div className="space-y-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <User className="h-3 w-3 text-slate-500" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Core Identity</h3>
-                                    </div>
-
-                                    <div className="space-y-1 group">
-                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">Customer</Label>
-                                        <Input
-                                            placeholder="Full Name"
-                                            value={formData.customerName}
-                                            onChange={e => setFormData({ ...formData, customerName: e.target.value })}
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-3 w-3 text-slate-500" />
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Core Identity</h3>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             className={cn(
-                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                "h-6 w-6 rounded-lg transition-all",
+                                                isPersonalBulkMode
+                                                    ? "bg-indigo-500/20 text-indigo-400"
+                                                    : "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10"
                                             )}
-                                        />
+                                            onClick={() => setIsPersonalBulkMode(!isPersonalBulkMode)}
+                                            title="Quick Identity Entry"
+                                        >
+                                            <FileSpreadsheet className="h-3 w-3" />
+                                        </Button>
                                     </div>
 
-                                    <div className="space-y-1 group">
-                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">VIN Number</Label>
-                                        <Input
-                                            placeholder="VF1..."
-                                            value={formData.vin}
-                                            onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                                            className={cn(
-                                                "bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
-                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                            )}
-                                            maxLength={17}
-                                        />
-                                    </div>
+                                    <AnimatePresence mode="wait">
+                                        {isPersonalBulkMode ? (
+                                            <motion.div
+                                                key="personal-bulk"
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                className="space-y-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10"
+                                            >
+                                                <div className="space-y-1">
+                                                    <Label className="text-[9px] font-bold text-indigo-400 uppercase ml-1">Smart Paste (Name | VIN | Mobile | KM | SAB | Agent)</Label>
+                                                    <Textarea
+                                                        placeholder="Paste single line here..."
+                                                        value={personalBulkText}
+                                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPersonalBulkText(e.target.value)}
+                                                        className="h-20 resize-none bg-[#0a0a0b]/60 border-white/5 text-[10px] p-2 rounded-lg focus:ring-1 focus:ring-indigo-500/30"
+                                                    />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        onClick={handlePersonalBulkImport}
+                                                        className="flex-1 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold uppercase tracking-widest"
+                                                    >
+                                                        Confirm Identity
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => setIsPersonalBulkMode(false)}
+                                                        className="h-7 px-3 rounded-lg text-slate-500 text-[9px] font-black uppercase"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div
+                                                key="personal-fields"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="space-y-3"
+                                            >
+                                                <div className="space-y-1 group">
+                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">Customer</Label>
+                                                    <Input
+                                                        placeholder="Full Name"
+                                                        value={formData.customerName}
+                                                        onChange={e => setFormData({ ...formData, customerName: e.target.value })}
+                                                        className={cn(
+                                                            "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        )}
+                                                    />
+                                                </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1 group">
-                                            <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Mobile</Label>
-                                            <Input
-                                                placeholder="0xxxxxxxxx"
-                                                value={formData.mobile}
-                                                onChange={e => setFormData({ ...formData, mobile: e.target.value })}
-                                                className={cn(
-                                                    "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-                                                    isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                                )}
-                                            />
-                                        </div>
-                                        <div className="space-y-1 group">
-                                            <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Odo (KM)</Label>
-                                            <Input
-                                                type="number"
-                                                placeholder="0"
-                                                value={formData.cntrRdg}
-                                                onChange={e => setFormData({ ...formData, cntrRdg: e.target.value })}
-                                                className={cn(
-                                                    "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-                                                    isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                                )}
-                                            />
-                                        </div>
-                                    </div>
+                                                <div className="space-y-1 group">
+                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">VIN Number</Label>
+                                                    <Input
+                                                        placeholder="VF1..."
+                                                        value={formData.vin}
+                                                        onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
+                                                        className={cn(
+                                                            "bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
+                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        )}
+                                                        maxLength={17}
+                                                    />
+                                                </div>
 
-                                    <div className="space-y-1 group">
-                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Vehicle Model</Label>
-                                        <div className={cn(
-                                            "rounded-lg transition-all",
-                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                        )}>
-                                            <EditableSelect
-                                                options={models}
-                                                value={formData.model}
-                                                onChange={val => setFormData({ ...formData, model: val })}
-                                                onAdd={addModel}
-                                                onRemove={removeModel}
-                                                placeholder="Select model..."
-                                            />
-                                        </div>
-                                    </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Mobile</Label>
+                                                        <Input
+                                                            placeholder="0xxxxxxxxx"
+                                                            value={formData.mobile}
+                                                            onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Odo (KM)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            value={formData.cntrRdg}
+                                                            onChange={e => setFormData({ ...formData, cntrRdg: e.target.value })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">SAB NO.</Label>
+                                                        <Input
+                                                            placeholder="Order SAB"
+                                                            value={formData.sabNumber}
+                                                            onChange={e => setFormData({ ...formData, sabNumber: e.target.value })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Accepted By</Label>
+                                                        <Input
+                                                            placeholder="Agent Name"
+                                                            value={formData.acceptedBy}
+                                                            onChange={e => setFormData({ ...formData, acceptedBy: e.target.value })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1 group">
+                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Vehicle Model</Label>
+                                                    <div className={cn(
+                                                        "rounded-lg transition-all",
+                                                        isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                    )}>
+                                                        <EditableSelect
+                                                            options={models}
+                                                            value={formData.model}
+                                                            onChange={val => setFormData({ ...formData, model: val })}
+                                                            onAdd={addModel}
+                                                            onRemove={removeModel}
+                                                            placeholder="Select model..."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
 
                                 <div className="pt-3 border-t border-white/5 space-y-3">

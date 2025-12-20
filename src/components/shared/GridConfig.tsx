@@ -158,9 +158,19 @@ export const getBaseColumns = (): ColDef<PendingRow>[] => [
         width: 110,
     },
     {
-        headerName: "CNTR RDG", // Changed from CNT.
+        headerName: "CNTR RDG",
         field: "cntrRdg",
         width: 90,
+    },
+    {
+        headerName: "SAB NO.",
+        field: "sabNumber",
+        width: 110,
+    },
+    {
+        headerName: "ACCEPTED BY",
+        field: "acceptedBy",
+        width: 120,
     },
     {
         headerName: "MODEL",

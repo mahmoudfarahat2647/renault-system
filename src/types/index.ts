@@ -28,6 +28,8 @@ export interface PendingRow {
 
     // Logistics Info
     parts: PartEntry[]; // Support for multiple parts
+    sabNumber: string;
+    acceptedBy: string;
     requester: string;
     requestedBy?: string;
     partStatus?: string;
