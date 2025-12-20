@@ -28,22 +28,29 @@ import type { PendingRow, PartEntry } from "@/types";
 import { generateId, getCalculatorValues, detectModelFromVin, cn } from "@/lib/utils";
 import {
     Plus,
-    Printer,
-    Send,
-    Phone,
-    FileSpreadsheet,
+    Search,
     Filter,
     Download,
-    Tag,
-    Calendar,
-    Folder,
-    Trash2,
-    CheckCircle,
-    Pencil,
-    Clock,
-    User,
+    MoreVertical,
     ClipboardList,
+    Package,
+    Clock,
+    CheckCircle,
+    CheckCircle2,
+    ShieldCheck,
+    AlertCircle,
+    Pencil,
+    Trash2,
+    User,
+    Phone,
+    Send,
+    Tag,
+    Folder,
     X,
+    MapPin,
+    Printer,
+    FileSpreadsheet,
+    Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -412,99 +419,149 @@ export default function OrdersPage() {
                 </Card>
 
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                    <DialogContent className="max-w-4xl p-0 overflow-hidden border-none bg-[#1c1c1e] text-white">
-                        <div className={cn(
-                            "p-6 transition-colors duration-500",
-                            isEditMode
-                                ? "bg-gradient-to-r from-amber-600 to-orange-600"
-                                : "bg-gradient-to-r from-indigo-600 to-blue-600"
-                        )}>
-                            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-                                {isEditMode ? <Pencil className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                                {isEditMode
-                                    ? (isMultiSelection ? `Bulk Edit ${selectedOrderCount} Entries` : "Edit Order")
-                                    : "Create New Logistics Entry"}
-                            </DialogTitle>
-                            <DialogDescription className="text-white/70 text-sm mt-1">
-                                {isMultiSelection
-                                    ? `Managing ${selectedOrderCount} entries for this VIN. You can edit, add, or remove parts individually.`
-                                    : "High-efficiency command center for complex repairs"}
-                            </DialogDescription>
+                    <DialogContent className="max-w-4xl p-0 overflow-hidden border border-white/5 bg-[#0c0c0e] text-slate-200 shadow-2xl shadow-black/50">
+                        {/* Glass-morphism Header - Compact Version */}
+                        <div className="relative overflow-hidden group">
+                            <div className={cn(
+                                "absolute inset-0 opacity-15 blur-xl transition-all duration-700",
+                                isEditMode ? "bg-amber-500" : "bg-indigo-500"
+                            )} />
+                            <div className={cn(
+                                "relative px-6 py-4 border-b border-white/5 backdrop-blur-md flex items-center justify-between",
+                                isEditMode ? "bg-amber-500/10" : "bg-indigo-500/10"
+                            )}>
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        "p-2 rounded-lg transition-colors duration-500 shadow-md",
+                                        isEditMode ? "bg-amber-500 text-black" : "bg-indigo-500 text-white"
+                                    )}>
+                                        {isEditMode ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-lg font-bold tracking-tight text-white leading-none">
+                                            {isEditMode
+                                                ? (isMultiSelection ? `Bulk Edit (${selectedOrderCount})` : "Modify Order")
+                                                : "New Logistics Request"}
+                                        </DialogTitle>
+                                        <DialogDescription className="text-slate-500 text-[10px] mt-0.5 uppercase tracking-wider font-bold">
+                                            {isMultiSelection
+                                                ? "Synchronizing batch metadata"
+                                                : "Vehicle Repair Command Center"}
+                                        </DialogDescription>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex flex-col items-end mr-4">
+                                        <span className="text-[9px] uppercase font-black text-slate-600 tracking-tighter">System Status</span>
+                                        <span className="text-[10px] font-mono text-emerald-500 flex items-center gap-1 leading-none">
+                                            <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" /> Live
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="p-6 grid grid-cols-12 gap-6 max-h-[70vh] overflow-y-auto">
-                            {/* Left Column: Customer & Vehicle */}
+                        <div className="p-5 grid grid-cols-12 gap-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            {/* Left Column: Metadata */}
                             <div className="col-span-12 lg:col-span-5 space-y-4">
-                                <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                                        <User className="h-3 w-3" /> Customer & Vehicle
-                                    </h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <User className="h-3 w-3 text-slate-500" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Core Identity</h3>
+                                    </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-gray-400">Customer Name</Label>
+                                    <div className="space-y-1 group">
+                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">Customer</Label>
                                         <Input
+                                            placeholder="Full Name"
                                             value={formData.customerName}
                                             onChange={e => setFormData({ ...formData, customerName: e.target.value })}
-                                            className="bg-white/5 border-white/10 h-9"
+                                            className={cn(
+                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                            )}
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-gray-400">VIN Number</Label>
+                                    <div className="space-y-1 group">
+                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">VIN Number</Label>
                                         <Input
+                                            placeholder="VF1..."
                                             value={formData.vin}
                                             onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                                            className="bg-white/5 border-white/10 h-9 font-mono"
+                                            className={cn(
+                                                "bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
+                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                            )}
                                             maxLength={17}
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-gray-400">Mobile</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1 group">
+                                            <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Mobile</Label>
                                             <Input
+                                                placeholder="0xxxxxxxxx"
                                                 value={formData.mobile}
                                                 onChange={e => setFormData({ ...formData, mobile: e.target.value })}
-                                                className="bg-white/5 border-white/10 h-9"
+                                                className={cn(
+                                                    "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                    isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                )}
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-gray-400">Odometer</Label>
+                                        <div className="space-y-1 group">
+                                            <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Odo (KM)</Label>
                                             <Input
                                                 type="number"
+                                                placeholder="0"
                                                 value={formData.cntrRdg}
                                                 onChange={e => setFormData({ ...formData, cntrRdg: e.target.value })}
-                                                className="bg-white/5 border-white/10 h-9"
+                                                className={cn(
+                                                    "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                    isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                )}
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-gray-400">Model</Label>
-                                        <EditableSelect
-                                            options={models}
-                                            value={formData.model}
-                                            onChange={val => setFormData({ ...formData, model: val })}
-                                            onAdd={addModel}
-                                            onRemove={removeModel}
-                                            placeholder="Select or add model..."
-                                        />
+                                    <div className="space-y-1 group">
+                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Vehicle Model</Label>
+                                        <div className={cn(
+                                            "rounded-lg transition-all",
+                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                        )}>
+                                            <EditableSelect
+                                                options={models}
+                                                value={formData.model}
+                                                onChange={val => setFormData({ ...formData, model: val })}
+                                                onAdd={addModel}
+                                                onRemove={removeModel}
+                                                placeholder="Select model..."
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                                        <Tag className="h-3 w-3" /> Workflow
-                                    </h3>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-gray-400">Repair System</Label>
-                                        <EditableSelect
-                                            options={repairSystems}
-                                            value={formData.repairSystem}
-                                            onChange={val => setFormData({ ...formData, repairSystem: val })}
-                                            onAdd={addRepairSystem}
-                                            onRemove={removeRepairSystem}
-                                        />
+                                <div className="pt-3 border-t border-white/5 space-y-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Tag className="h-3 w-3 text-slate-500" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workflow</h3>
+                                    </div>
+                                    <div className="space-y-1 group">
+                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Repair System</Label>
+                                        <div className={cn(
+                                            "rounded-lg transition-all",
+                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                        )}>
+                                            <EditableSelect
+                                                options={repairSystems}
+                                                value={formData.repairSystem}
+                                                onChange={val => setFormData({ ...formData, repairSystem: val })}
+                                                onAdd={addRepairSystem}
+                                                onRemove={removeRepairSystem}
+                                            />
+                                        </div>
                                     </div>
 
                                     <AnimatePresence>
@@ -513,24 +570,29 @@ export default function OrdersPage() {
                                                 initial={{ height: 0, opacity: 0 }}
                                                 animate={{ height: "auto", opacity: 1 }}
                                                 exit={{ height: 0, opacity: 0 }}
-                                                className="space-y-3 pt-2 border-t border-white/10 overflow-hidden"
+                                                className="space-y-2 pt-2 overflow-hidden"
                                             >
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs text-gray-400">ICM Start Date</Label>
+                                                <div className="space-y-1 group">
+                                                    <Label className="text-[9px] font-bold text-slate-600 ml-1 uppercase">ICM Date</Label>
                                                     <Input
                                                         type="date"
                                                         value={formData.startWarranty}
                                                         onChange={e => setFormData({ ...formData, startWarranty: e.target.value })}
-                                                        className="bg-white/5 border-white/10 h-9"
+                                                        className={cn(
+                                                            "bg-[#161618] border-white/5 h-8 text-xs rounded-lg px-3 transition-all",
+                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        )}
                                                     />
                                                 </div>
                                                 {countdown && (
-                                                    <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                                                        <Label className="text-[10px] text-indigo-400 uppercase font-bold">Remaining Warranty</Label>
-                                                        <div className="flex items-center gap-2 text-indigo-300 font-mono text-sm mt-1">
-                                                            <Clock className="h-3.5 w-3.5" />
-                                                            {countdown.remainTime}
+                                                    <div className="p-2.5 rounded-xl bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock className="h-3 w-3 text-indigo-400" />
+                                                            <span className="text-[11px] text-indigo-200 font-mono tracking-tighter">
+                                                                {countdown.remainTime}
+                                                            </span>
                                                         </div>
+                                                        <ShieldCheck className="h-4 w-4 text-indigo-500/30" />
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -539,103 +601,137 @@ export default function OrdersPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Parts & Details */}
-                            <div className="col-span-12 lg:col-span-7 space-y-4">
-                                <div className="space-y-4 bg-white/5 p-4 rounded-xl border border-white/10 h-full flex flex-col">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                                            <ClipboardList className="h-3 w-3" /> Order Details / Parts
-                                        </h3>
+                            {/* Right Column: Parts Grid */}
+                            <div className="col-span-12 lg:col-span-7 flex flex-col min-h-[300px]">
+                                <div className="flex-1 bg-white/[0.01] rounded-2xl border border-white/5 p-4 flex flex-col relative overflow-hidden">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <ClipboardList className="h-3 w-3 text-slate-500" />
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+                                                Components
+                                            </h3>
+                                        </div>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-7 text-[10px] text-renault-yellow hover:text-renault-yellow hover:bg-renault-yellow/10"
+                                            className={cn(
+                                                "h-7 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                                isEditMode
+                                                    ? "text-amber-500 hover:bg-amber-500/10"
+                                                    : "text-indigo-400 hover:bg-indigo-500/10"
+                                            )}
                                             onClick={handleAddPartRow}
                                         >
-                                            <Plus className="h-3 w-3 mr-1" /> Add Part
+                                            <Plus className="h-3 w-3 mr-1" /> Add Entry
                                         </Button>
                                     </div>
 
-                                    <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                                         <AnimatePresence initial={false}>
                                             {parts.map((part, index) => (
                                                 <motion.div
                                                     key={part.id}
-                                                    initial={{ opacity: 0, y: 10 }}
+                                                    initial={{ opacity: 0, y: 5 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95 }}
-                                                    className="grid grid-cols-12 gap-2 group"
+                                                    exit={{ opacity: 0, scale: 0.98 }}
                                                 >
-                                                    <div className="col-span-4">
-                                                        <Input
-                                                            placeholder="Part Number"
-                                                            value={part.partNumber}
-                                                            onChange={e => handlePartChange(part.id, "partNumber", e.target.value)}
-                                                            className="bg-white/5 border-white/10 h-9 text-xs font-mono"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-7">
-                                                        <Input
-                                                            ref={(el) => (descriptionRefs.current[index] = el)}
-                                                            placeholder="Description"
-                                                            value={part.description}
-                                                            onChange={e => handlePartChange(part.id, "description", e.target.value)}
-                                                            onKeyDown={e => {
-                                                                if (e.key === "Enter") {
-                                                                    e.preventDefault();
-                                                                    handleAddPartRow();
-                                                                    setTimeout(() => {
-                                                                        descriptionRefs.current[index + 1]?.focus();
-                                                                    }, 0);
-                                                                }
-                                                            }}
-                                                            className="bg-white/5 border-white/10 h-9 text-xs"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-1 flex items-center justify-end">
+                                                    <div className="flex items-center gap-2 bg-white/[0.02] hover:bg-white/[0.04] p-1.5 rounded-xl border border-white/5 group/row transition-all">
+                                                        <div className="w-1/3">
+                                                            <Input
+                                                                placeholder="REF#"
+                                                                value={part.partNumber}
+                                                                onChange={e => handlePartChange(part.id, "partNumber", e.target.value)}
+                                                                className={cn(
+                                                                    "bg-white/5 border-white/5 h-8 text-[10px] font-mono rounded-lg px-2 focus:ring-1",
+                                                                    isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
+                                                                )}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <Input
+                                                                ref={(el) => (descriptionRefs.current[index] = el)}
+                                                                placeholder="Description"
+                                                                value={part.description}
+                                                                onChange={e => handlePartChange(part.id, "description", e.target.value)}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault();
+                                                                        handleAddPartRow();
+                                                                        setTimeout(() => {
+                                                                            descriptionRefs.current[index + 1]?.focus();
+                                                                        }, 0);
+                                                                    }
+                                                                }}
+                                                                className={cn(
+                                                                    "bg-white/5 border-white/5 h-8 text-[10px] rounded-lg px-2 focus:ring-1",
+                                                                    isEditMode ? "focus:ring-amber-500/30" : "focus:ring-indigo-500/30"
+                                                                )}
+                                                            />
+                                                        </div>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="h-7 w-7 text-slate-600 hover:text-red-400 opacity-0 group-hover/row:opacity-100 transition-opacity"
                                                             onClick={() => handleRemovePartRow(part.id)}
                                                         >
-                                                            <X className="h-4 w-4" />
+                                                            <X className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>
+
+                                        {parts.length === 0 && (
+                                            <div className="h-full flex flex-col items-center justify-center space-y-2 py-10 opacity-10">
+                                                <Package className="h-8 w-8" />
+                                                <p className="text-[10px] font-bold uppercase tracking-widest">Idle</p>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="space-y-2 mt-4 pt-4 border-t border-white/10">
-                                        <Label className="text-xs text-gray-400">Requester (Branch/Person)</Label>
-                                        <Input
-                                            value={formData.requester}
-                                            onChange={e => setFormData({ ...formData, requester: e.target.value })}
-                                            className="bg-white/5 border-white/10 h-9"
-                                            placeholder="Enter requester..."
-                                        />
+                                    {/* Requester Inline */}
+                                    <div className="mt-4 pt-4 border-t border-white/5">
+                                        <div className="flex items-center gap-2 group">
+                                            <MapPin className="h-3 w-3 text-slate-600" />
+                                            <Input
+                                                placeholder="Requester / Branch"
+                                                value={formData.requester}
+                                                onChange={e => setFormData({ ...formData, requester: e.target.value })}
+                                                className={cn(
+                                                    "bg-transparent border-transparent h-8 text-xs px-0 hover:bg-white/5 focus:bg-white/5 focus:border-white/5 transition-all text-slate-400 focus:text-slate-200",
+                                                    isEditMode ? "focus:border-amber-500/20" : "focus:border-indigo-500/20"
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5">
-                            <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={() => setIsModalOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button
-                                className={cn(
-                                    "px-8 h-10 font-bold",
-                                    isEditMode ? "bg-amber-500 hover:bg-amber-600 text-black" : "bg-renault-yellow hover:bg-renault-yellow/90 text-black"
-                                )}
-                                onClick={handleSubmit}
-                            >
-                                {isEditMode
-                                    ? (isMultiSelection ? `Update ${selectedOrderCount} Entries` : "Save Changes")
-                                    : "Create Global Order"}
-                                <CheckCircle className="ml-2 h-4 w-4" />
-                            </Button>
+                        <DialogFooter className="px-6 py-4 bg-white/[0.01] border-t border-white/5">
+                            <div className="flex items-center justify-between w-full">
+                                <Button
+                                    variant="ghost"
+                                    className="h-9 px-4 rounded-lg text-[10px] font-bold text-slate-500 hover:text-white transition-all uppercase tracking-widest"
+                                    onClick={() => setIsModalOpen(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    className={cn(
+                                        "h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-[0.98]",
+                                        isEditMode
+                                            ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/10"
+                                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/10"
+                                    )}
+                                    onClick={handleSubmit}
+                                >
+                                    {isEditMode
+                                        ? (isMultiSelection ? "Commit Batch" : "Commit")
+                                        : "Publish"}
+                                    <CheckCircle2 className="ml-2 h-3 w-3" />
+                                </Button>
+                            </div>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
