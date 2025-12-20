@@ -5,6 +5,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const VIN_PREFIX_MAP: Record<string, string> = {
+  "VF1RJA": "Clio V",
+  "VF1RJB": "Captur II",
+  "VF1RFB": "Megane IV",
+  "VF1RFE": "Kadjar",
+  "VF1RFA": "Talisman",
+  "VF1HJB": "Duster II",
+  "VF1XJA": "Arkana",
+  "VF1LJA": "Logan III",
+  "VF1SJA": "Sandero III",
+};
+
+/**
+ * Detect vehicle model from VIN prefix
+ */
+export function detectModelFromVin(vin: string): string | null {
+  if (!vin || vin.length < 6) return null;
+  const prefix = vin.substring(0, 6).toUpperCase();
+  return VIN_PREFIX_MAP[prefix] || null;
+}
+
 /**
  * Calculate warranty end date and remaining time
  */
@@ -42,11 +63,6 @@ export function getCalculatorValues(dateStr: string) {
     years--;
     months += 12;
   }
-
-  const parts = [];
-  if (years > 0) parts.push(`${years}Y`);
-  if (months > 0) parts.push(`${months}M`);
-  if (days > 0) parts.push(`${days}D`);
 
   // Format as "year - month - day"
   return {

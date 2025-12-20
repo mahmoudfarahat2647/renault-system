@@ -7,6 +7,12 @@ export type Status =
     | "Reorder"
     | "Call";
 
+export interface PartEntry {
+    id: string;
+    partNumber: string;
+    description: string;
+}
+
 export interface PendingRow {
     id: string;
     baseId: string;
@@ -20,11 +26,14 @@ export interface PendingRow {
     model: string;
 
     // Logistics Info
-    partNumber: string;
-    description: string;
+    parts: PartEntry[]; // Support for multiple parts
     requester: string;
     requestedBy?: string;
     partStatus?: string;
+
+    // Legacy fields for grid compatibility (will use first part info for these)
+    partNumber: string;
+    description: string;
 
     // Workflow Info
     status: Status;
@@ -90,6 +99,10 @@ export interface AppState extends AppStateSnapshot {
     todos: TodoItem[];
     notes: StickyNote[];
     partStatuses: PartStatusDef[];
+
+    // Dynamic Managed Lists
+    models: string[];
+    repairSystems: string[];
 
     // Templates
     noteTemplates: string[];

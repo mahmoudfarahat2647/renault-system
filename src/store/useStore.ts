@@ -19,6 +19,12 @@ interface AppActions {
     updateOrder: (id: string, updates: Partial<PendingRow>) => void;
     deleteOrders: (ids: string[]) => void;
 
+    // Dynamic List Actions
+    addModel: (model: string) => void;
+    removeModel: (model: string) => void;
+    addRepairSystem: (system: string) => void;
+    removeRepairSystem: (system: string) => void;
+
     // Movement Actions
     commitToMainSheet: (ids: string[]) => void;
     sendToCallList: (ids: string[]) => void;
@@ -67,6 +73,8 @@ const initialState: AppState = {
     todos: [],
     notes: [],
     partStatuses: defaultPartStatuses,
+    models: ["Megane IV", "Clio V", "Kadjar", "Captur II", "Duster II", "Talisman"],
+    repairSystems: ["Mechanical", "Electrical", "Body", "ضمان"],
     noteTemplates: ["Customer not available", "Wrong number", "Will call back"],
     reminderTemplates: ["Follow up call", "Check part status", "Confirm booking"],
     bookingTemplates: ["Morning slot", "Afternoon slot", "Next available"],
@@ -120,6 +128,28 @@ export const useAppStore = create<AppState & AppActions>()(
                     archiveRowData: filterArray(state.archiveRowData),
                 }));
                 get().addCommit("Delete Orders");
+            },
+
+            // Dynamic List Actions
+            addModel: (model) => {
+                set((state) => ({
+                    models: state.models.includes(model) ? state.models : [...state.models, model]
+                }));
+            },
+            removeModel: (model) => {
+                set((state) => ({
+                    models: state.models.filter(m => m !== model)
+                }));
+            },
+            addRepairSystem: (system) => {
+                set((state) => ({
+                    repairSystems: state.repairSystems.includes(system) ? state.repairSystems : [...state.repairSystems, system]
+                }));
+            },
+            removeRepairSystem: (system) => {
+                set((state) => ({
+                    repairSystems: state.repairSystems.filter(s => s !== system)
+                }));
             },
 
             // Movement Actions
@@ -410,7 +440,9 @@ export const useAppStore = create<AppState & AppActions>()(
                 todos: state.todos,
                 notes: state.notes,
                 partStatuses: state.partStatuses,
-                commits: state.commits, // Persist history? Maybe limit or remove for perf if not needed across reloads
+                models: state.models,
+                repairSystems: state.repairSystems,
+                commits: state.commits,
             }),
         }
     )
