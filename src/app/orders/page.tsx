@@ -164,6 +164,19 @@ export default function OrdersPage() {
     };
 
     const handleSubmit = () => {
+        const isHighMileageValid = (parseInt(formData.cntrRdg) || 0) >= 100000;
+        const isExpiredValid = countdown?.expired || false;
+
+        if (formData.repairSystem === "ضمان") {
+            if (isHighMileageValid || isExpiredValid) {
+                toast.error(isHighMileageValid && isExpiredValid
+                    ? "Ineligible for Warranty: High mileage and expired period."
+                    : isHighMileageValid ? "Ineligible for Warranty: Vehicle exceeds 100,000 KM."
+                        : "Ineligible for Warranty: Period has expired.");
+                return;
+            }
+        }
+
         const warrantyCalc = getCalculatorValues(formData.startWarranty);
 
         if (isEditMode) {
@@ -184,8 +197,8 @@ export default function OrdersPage() {
                 const commonData = {
                     ...formData,
                     cntrRdg: parseInt(formData.cntrRdg) || 0,
-                    endWarranty: warrantyCalc.endDate,
-                    remainTime: warrantyCalc.remainTime,
+                    endWarranty: warrantyCalc?.endDate || "",
+                    remainTime: warrantyCalc?.remainTime || "",
                 };
 
                 if (part.rowId) {
@@ -232,8 +245,8 @@ export default function OrdersPage() {
                 parts: [part], // Store individual part for later edits
                 repairSystem: formData.repairSystem,
                 startWarranty: formData.startWarranty,
-                endWarranty: warrantyCalc.endDate,
-                remainTime: warrantyCalc.remainTime,
+                endWarranty: warrantyCalc?.endDate || "",
+                remainTime: warrantyCalc?.remainTime || "",
                 status: "Ordered",
                 rDate: new Date().toISOString().split("T")[0],
                 requester: formData.requester,
@@ -268,6 +281,9 @@ export default function OrdersPage() {
         }
         return null;
     }, [formData.repairSystem, formData.startWarranty]);
+
+    const isHighMileage = (parseInt(formData.cntrRdg) || 0) >= 100000;
+    const isExpired = countdown?.expired || false;
 
     return (
         <TooltipProvider>
@@ -572,15 +588,16 @@ export default function OrdersPage() {
                                             </div>
                                         </div>
 
-                                        <AnimatePresence>
+                                        <AnimatePresence mode="wait">
                                             {formData.repairSystem === "ضمان" && (
-                                                <>
-                                                    <motion.div
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: -10 }}
-                                                        className="col-span-4 space-y-1 group"
-                                                    >
+                                                <motion.div
+                                                    key="warranty-fields"
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: "auto" }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="col-span-8 grid grid-cols-2 gap-3"
+                                                >
+                                                    <div className="space-y-1 group">
                                                         <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">ICM Date</Label>
                                                         <Input
                                                             type="date"
@@ -591,13 +608,8 @@ export default function OrdersPage() {
                                                                 isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
                                                             )}
                                                         />
-                                                    </motion.div>
-                                                    <motion.div
-                                                        initial={{ opacity: 0, x: 10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: 10 }}
-                                                        className="col-span-4 space-y-1"
-                                                    >
+                                                    </div>
+                                                    <div className="space-y-1">
                                                         <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Status</Label>
                                                         <div className="flex items-center h-8">
                                                             {countdown && (
@@ -608,10 +620,11 @@ export default function OrdersPage() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    </motion.div>
-                                                </>
+                                                    </div>
+                                                </motion.div>
                                             )}
                                         </AnimatePresence>
+
                                     </div>
                                 </div>
                             </div>
@@ -664,7 +677,7 @@ export default function OrdersPage() {
                                                         </div>
                                                         <div className="flex-1">
                                                             <Input
-                                                                ref={(el) => (descriptionRefs.current[index] = el)}
+                                                                ref={(el) => { descriptionRefs.current[index] = el; }}
                                                                 placeholder="Description"
                                                                 value={part.description}
                                                                 onChange={e => handlePartChange(part.id, "description", e.target.value)}
@@ -732,26 +745,55 @@ export default function OrdersPage() {
                                 >
                                     Cancel
                                 </Button>
-                                <Button
-                                    className={cn(
-                                        "h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-[0.98]",
-                                        isEditMode
-                                            ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/10"
-                                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/10"
-                                    )}
-                                    onClick={handleSubmit}
-                                >
-                                    {isEditMode
-                                        ? (isMultiSelection ? "Commit Batch" : "Commit")
-                                        : "Publish"}
-                                    <CheckCircle2 className="ml-2 h-3 w-3" />
-                                </Button>
+
+                                <div className="flex items-center gap-3">
+                                    <AnimatePresence>
+                                        {formData.repairSystem === "ضمان" && (isHighMileage || isExpired) && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                            >
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 cursor-help transition-all hover:bg-orange-500/20">
+                                                            <AlertCircle className="h-3.5 w-3.5" />
+                                                            <span className="text-[10px] font-black uppercase tracking-wider">Ineligible</span>
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" className="bg-[#1c1c1f] border-white/10 text-orange-200 text-[10px] p-2 max-w-[200px]">
+                                                        {isHighMileage && isExpired
+                                                            ? "Vehicle exceeds 100,000 KM & Warranty has expired."
+                                                            : isHighMileage
+                                                                ? "Vehicle exceeds 100,000 KM limitation."
+                                                                : "The vehicle's warranty period has expired."}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    <Button
+                                        className={cn(
+                                            "h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-[0.98]",
+                                            isEditMode
+                                                ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/10"
+                                                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/10"
+                                        )}
+                                        onClick={handleSubmit}
+                                    >
+                                        {isEditMode
+                                            ? (isMultiSelection ? "Commit Batch" : "Commit")
+                                            : "Publish"}
+                                        <CheckCircle2 className="ml-2 h-3 w-3" />
+                                    </Button>
+                                </div>
                             </div>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
-        </TooltipProvider>
+        </TooltipProvider >
     );
 }
 
