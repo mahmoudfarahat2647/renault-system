@@ -625,18 +625,33 @@ export default function OrdersPage() {
                                                     />
                                                 </div>
 
-                                                <div className="space-y-1 group">
-                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">VIN Number</Label>
-                                                    <Input
-                                                        placeholder="VF1..."
-                                                        value={formData.vin}
-                                                        onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
-                                                        className={cn(
-                                                            "bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
-                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                                        )}
-                                                        maxLength={17}
-                                                    />
+                                                <div className="grid grid-cols-10 gap-3">
+                                                    <div className="col-span-7 space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">VIN Number</Label>
+                                                        <Input
+                                                            placeholder="VF1..."
+                                                            value={formData.vin}
+                                                            onChange={e => setFormData({ ...formData, vin: e.target.value.toUpperCase() })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                            maxLength={17}
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-3 space-y-1 group">
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Odo (KM)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            value={formData.cntrRdg}
+                                                            onChange={e => setFormData({ ...formData, cntrRdg: e.target.value })}
+                                                            className={cn(
+                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                            )}
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-3">
@@ -653,12 +668,11 @@ export default function OrdersPage() {
                                                         />
                                                     </div>
                                                     <div className="space-y-1 group">
-                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Odo (KM)</Label>
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Accepted By</Label>
                                                         <Input
-                                                            type="number"
-                                                            placeholder="0"
-                                                            value={formData.cntrRdg}
-                                                            onChange={e => setFormData({ ...formData, cntrRdg: e.target.value })}
+                                                            placeholder="Agent Name"
+                                                            value={formData.acceptedBy}
+                                                            onChange={e => setFormData({ ...formData, acceptedBy: e.target.value })}
                                                             className={cn(
                                                                 "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
                                                                 isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
@@ -681,107 +695,86 @@ export default function OrdersPage() {
                                                         />
                                                     </div>
                                                     <div className="space-y-1 group">
-                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Accepted By</Label>
-                                                        <Input
-                                                            placeholder="Agent Name"
-                                                            value={formData.acceptedBy}
-                                                            onChange={e => setFormData({ ...formData, acceptedBy: e.target.value })}
-                                                            className={cn(
-                                                                "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                                            )}
-                                                        />
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Vehicle Model</Label>
+                                                        <div className={cn(
+                                                            "rounded-lg transition-all",
+                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        )}>
+                                                            <EditableSelect
+                                                                options={models}
+                                                                value={formData.model}
+                                                                onChange={val => setFormData({ ...formData, model: val })}
+                                                                onAdd={addModel}
+                                                                onRemove={removeModel}
+                                                                placeholder="Select model..."
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-1 group">
-                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Vehicle Model</Label>
+                                                <div className={cn(
+                                                    "grid gap-3 transition-all duration-300",
+                                                    formData.repairSystem === "ضمان" ? "grid-cols-12" : "grid-cols-1"
+                                                )}>
                                                     <div className={cn(
-                                                        "rounded-lg transition-all",
-                                                        isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        "space-y-1 group",
+                                                        formData.repairSystem === "ضمان" ? "col-span-4" : "col-span-1"
                                                     )}>
-                                                        <EditableSelect
-                                                            options={models}
-                                                            value={formData.model}
-                                                            onChange={val => setFormData({ ...formData, model: val })}
-                                                            onAdd={addModel}
-                                                            onRemove={removeModel}
-                                                            placeholder="Select model..."
-                                                        />
+                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Repair System</Label>
+                                                        <div className={cn(
+                                                            "rounded-lg transition-all",
+                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                        )}>
+                                                            <EditableSelect
+                                                                options={repairSystems}
+                                                                value={formData.repairSystem}
+                                                                onChange={val => setFormData({ ...formData, repairSystem: val })}
+                                                                onAdd={addRepairSystem}
+                                                                onRemove={removeRepairSystem}
+                                                            />
+                                                        </div>
                                                     </div>
+
+                                                    <AnimatePresence mode="wait">
+                                                        {formData.repairSystem === "ضمان" && (
+                                                            <motion.div
+                                                                key="warranty-fields-inline"
+                                                                initial={{ opacity: 0, x: 10 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                exit={{ opacity: 0, x: 10 }}
+                                                                className="col-span-8 grid grid-cols-2 gap-3"
+                                                            >
+                                                                <div className="space-y-1 group">
+                                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">ICM Date</Label>
+                                                                    <Input
+                                                                        type="date"
+                                                                        value={formData.startWarranty}
+                                                                        onChange={e => setFormData({ ...formData, startWarranty: e.target.value })}
+                                                                        className={cn(
+                                                                            "bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-2 transition-all",
+                                                                            isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Status</Label>
+                                                                    <div className="flex items-center h-9">
+                                                                        {countdown && (
+                                                                            <div className="w-full h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center overflow-hidden shadow-inner">
+                                                                                <span className="text-[10px] text-white font-mono font-black tracking-tight">
+                                                                                    {countdown.remainTime}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
                                                 </div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
-                                </div>
-
-                                <div className="pt-3 border-t border-white/5 space-y-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Tag className="h-3 w-3 text-slate-500" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Workflow</h3>
-                                    </div>
-
-                                    <div className={cn(
-                                        "grid gap-3 transition-all duration-300",
-                                        formData.repairSystem === "ضمان" ? "grid-cols-12" : "grid-cols-1"
-                                    )}>
-                                        <div className={cn(
-                                            "space-y-1 group",
-                                            formData.repairSystem === "ضمان" ? "col-span-4" : "col-span-1"
-                                        )}>
-                                            <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Repair System</Label>
-                                            <div className={cn(
-                                                "rounded-lg transition-all",
-                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                            )}>
-                                                <EditableSelect
-                                                    options={repairSystems}
-                                                    value={formData.repairSystem}
-                                                    onChange={val => setFormData({ ...formData, repairSystem: val })}
-                                                    onAdd={addRepairSystem}
-                                                    onRemove={removeRepairSystem}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <AnimatePresence mode="wait">
-                                            {formData.repairSystem === "ضمان" && (
-                                                <motion.div
-                                                    key="warranty-fields"
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: "auto" }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    className="col-span-8 grid grid-cols-2 gap-3"
-                                                >
-                                                    <div className="space-y-1 group">
-                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">ICM Date</Label>
-                                                        <Input
-                                                            type="date"
-                                                            value={formData.startWarranty}
-                                                            onChange={e => setFormData({ ...formData, startWarranty: e.target.value })}
-                                                            className={cn(
-                                                                "bg-[#161618] border-white/5 h-8 text-xs rounded-lg px-2 transition-all",
-                                                                isEditMode ? "premium-glow-amber" : "premium-glow-indigo"
-                                                            )}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">Status</Label>
-                                                        <div className="flex items-center h-8">
-                                                            {countdown && (
-                                                                <div className="w-full h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center overflow-hidden shadow-inner">
-                                                                    <span className="text-xs text-white font-mono font-black tracking-tight">
-                                                                        {countdown.remainTime}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                    </div>
                                 </div>
                             </div>
 
