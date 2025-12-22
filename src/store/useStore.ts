@@ -42,6 +42,7 @@ interface AppActions {
     undo: () => void;
     redo: () => void;
     clearHistory: () => void;
+    commitSave: () => void;
 
     // Todos
     addTodo: (text: string) => void;
@@ -58,10 +59,11 @@ interface AppActions {
 }
 
 const defaultPartStatuses: PartStatusDef[] = [
-    { id: "available", label: "Available", color: "#22c55e" },
-    { id: "ordered", label: "Ordered", color: "#eab308" },
-    { id: "backorder", label: "Backorder", color: "#ef4444" },
-    { id: "arrived", label: "Arrived", color: "#3b82f6" },
+    { id: 'arrived', label: 'Arrived', color: 'bg-emerald-500' },
+    { id: 'not_arrived', label: 'Not Arrived', color: 'bg-gray-800' },
+    { id: 'logistics', label: 'Logistics Pending', color: 'bg-yellow-400' },
+    { id: 'branch', label: 'Other Branch', color: 'bg-amber-800' },
+    { id: 'issue', label: 'Has Issue', color: 'bg-red-500' }
 ];
 
 const initialState: AppState = {
@@ -114,6 +116,7 @@ export const useAppStore = create<AppState & AppActions>()(
                     callRowData: updateInArray(state.callRowData),
                     archiveRowData: updateInArray(state.archiveRowData),
                 }));
+                get().addCommit("Update Order");
             },
 
             deleteOrders: (ids) => {
@@ -135,21 +138,25 @@ export const useAppStore = create<AppState & AppActions>()(
                 set((state) => ({
                     models: state.models.includes(model) ? state.models : [...state.models, model]
                 }));
+                get().addCommit("Add Model");
             },
             removeModel: (model) => {
                 set((state) => ({
                     models: state.models.filter(m => m !== model)
                 }));
+                get().addCommit("Remove Model");
             },
             addRepairSystem: (system) => {
                 set((state) => ({
                     repairSystems: state.repairSystems.includes(system) ? state.repairSystems : [...state.repairSystems, system]
                 }));
+                get().addCommit("Add Repair System");
             },
             removeRepairSystem: (system) => {
                 set((state) => ({
                     repairSystems: state.repairSystems.filter(s => s !== system)
                 }));
+                get().addCommit("Remove Repair System");
             },
 
             // Movement Actions
@@ -265,18 +272,21 @@ export const useAppStore = create<AppState & AppActions>()(
                         row.id === id ? { ...row, partStatus } : row
                     ),
                 }));
+                get().addCommit("Update Part Status");
             },
 
             addPartStatusDef: (status) => {
                 set((state) => ({
                     partStatuses: [...state.partStatuses, status],
                 }));
+                get().addCommit("Add Part Status Definition");
             },
 
             removePartStatusDef: (id) => {
                 set((state) => ({
                     partStatuses: state.partStatuses.filter((s) => s.id !== id),
                 }));
+                get().addCommit("Remove Part Status Definition");
             },
 
             // History
@@ -365,6 +375,12 @@ export const useAppStore = create<AppState & AppActions>()(
                 set({ commits: [], redos: [] });
             },
 
+            commitSave: () => {
+                // Clear both past and future history
+                // This represents an explicit save action by the user
+                set({ commits: [], redos: [] });
+            },
+
             // Todos
             addTodo: (text) => {
                 set((state) => ({
@@ -378,6 +394,7 @@ export const useAppStore = create<AppState & AppActions>()(
                         },
                     ],
                 }));
+                get().addCommit("Add Todo");
             },
 
             toggleTodo: (id) => {
@@ -386,12 +403,14 @@ export const useAppStore = create<AppState & AppActions>()(
                         todo.id === id ? { ...todo, completed: !todo.completed } : todo
                     ),
                 }));
+                get().addCommit("Toggle Todo");
             },
 
             deleteTodo: (id) => {
                 set((state) => ({
                     todos: state.todos.filter((todo) => todo.id !== id),
                 }));
+                get().addCommit("Delete Todo");
             },
 
             // Notes
@@ -407,6 +426,7 @@ export const useAppStore = create<AppState & AppActions>()(
                         },
                     ],
                 }));
+                get().addCommit("Add Note");
             },
 
             updateNote: (id, content) => {
@@ -415,22 +435,27 @@ export const useAppStore = create<AppState & AppActions>()(
                         note.id === id ? { ...note, content } : note
                     ),
                 }));
+                get().addCommit("Update Note");
             },
 
             deleteNote: (id) => {
                 set((state) => ({
                     notes: state.notes.filter((note) => note.id !== id),
                 }));
+                get().addCommit("Delete Note");
             },
 
             // Reset
             resetStore: () => {
                 set(initialState);
+                get().addCommit("Reset Store");
             },
         }),
         {
             name: "pending-sys-storage",
             // Only persist necessary state to avoid large local storage operations blocking hydration
+            // Note: We intentionally do NOT persist commits/redos (undo/redo history) to keep localStorage lightweight
+            // Data is persisted for crash protection, but undo/redo history is session-only
             partialize: (state) => ({
                 rowData: state.rowData,
                 ordersRowData: state.ordersRowData,
@@ -442,7 +467,6 @@ export const useAppStore = create<AppState & AppActions>()(
                 partStatuses: state.partStatuses,
                 models: state.models,
                 repairSystems: state.repairSystems,
-                commits: state.commits,
             }),
         }
     )
@@ -454,3 +478,4 @@ import { useStore } from 'zustand';
 export const useAppStoreSelector = <T>(selector: (state: AppState & AppActions) => T): T => {
     return useStore(useAppStore, selector);
 };
+

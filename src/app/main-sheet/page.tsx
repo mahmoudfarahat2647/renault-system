@@ -47,7 +47,7 @@ export default function MainSheetPage() {
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [autoLockCountdown, setAutoLockCountdown] = useState<number | null>(null);
 
-    const columns = useMemo(() => getMainSheetColumns(), []);
+    const columns = useMemo(() => getMainSheetColumns(partStatuses), [partStatuses]);
 
     // Auto-lock after 5 minutes of inactivity
     const resetAutoLockTimer = useCallback(() => {
@@ -336,6 +336,11 @@ export default function MainSheetPage() {
                             rowData={rowData}
                             columnDefs={columns}
                             onSelectionChanged={handleSelectionChanged}
+                            onCellValueChanged={(params) => {
+                                if (params.colDef.field === 'partStatus' && params.newValue !== params.oldValue) {
+                                    updatePartStatus(params.data.id, params.newValue);
+                                }
+                            }}
                             readOnly={isLocked}
                         />
                     </CardContent>

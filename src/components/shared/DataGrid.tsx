@@ -12,6 +12,7 @@ export interface DataGridProps {
     columnDefs: ColDef[];
     onSelectionChanged?: (selectedRows: PendingRow[]) => void;
     onGridReady?: (api: GridApi) => void;
+    onCellValueChanged?: (params: any) => void;
     height?: string;
     readOnly?: boolean;
 }
@@ -21,6 +22,7 @@ export const DataGrid = React.memo(function DataGrid({
     columnDefs,
     onSelectionChanged,
     onGridReady,
+    onCellValueChanged,
     height = "calc(100vh - 280px)",
     readOnly = false,
 }: DataGridProps) {
@@ -82,6 +84,7 @@ export const DataGrid = React.memo(function DataGrid({
                 suppressRowClickSelection
                 onGridReady={handleGridReady}
                 onSelectionChanged={handleSelectionChanged}
+                onCellValueChanged={onCellValueChanged}
                 animateRows
                 pagination
                 paginationPageSize={25}

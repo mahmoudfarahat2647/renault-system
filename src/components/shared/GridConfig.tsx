@@ -57,18 +57,68 @@ interface PartStatusRendererProps extends ICellRendererParams<PendingRow> {
 
 export const PartStatusRenderer = (params: PartStatusRendererProps) => {
     const value = params.value as string;
-    const statuses = params.partStatuses || [];
-    const statusDef = statuses.find((s) => s.label === value);
 
-    if (!value) return null;
+    // Enhanced null safety: handle undefined, null, or empty partStatuses array
+    const statuses = params.partStatuses || [];
+
+    // Handle empty state - no status selected
+    // Safely check if value is string before calling trim
+    if (!value || (typeof value === 'string' && value.trim() === '') || (typeof value !== 'string' && !String(value).trim())) {
+        return (
+            <div className="flex items-center justify-center h-full w-full gap-1" title="Select status">
+                <span className="text-xs text-gray-500">Select status</span>
+                <div className="text-xs text-gray-400 font-bold">▼</div>
+            </div>
+        );
+    }
+
+    // Handle selected state - status is selected
+    // Enhanced error handling for missing or invalid status definitions
+    let statusDef: PartStatusDef | undefined;
+    let colorClass = 'bg-gray-400'; // Default fallback color
+    let displayValue = value;
+
+    try {
+        // Safely find the status definition
+        if (Array.isArray(statuses) && statuses.length > 0) {
+            statusDef = statuses.find((s: PartStatusDef) => {
+                // Additional null safety for individual status objects
+                return s && typeof s.label === 'string' && s.label === value;
+            });
+        }
+
+        // Apply color with fallback handling
+        if (statusDef && statusDef.color && typeof statusDef.color === 'string') {
+            // Validate that the color class is not empty
+            const trimmedColor = statusDef.color.trim();
+            if (trimmedColor.length > 0) {
+                colorClass = trimmedColor;
+            } else {
+                // Log warning for empty color definition
+                console.warn(`PartStatusRenderer: Empty color definition for status "${value}"`);
+            }
+        } else {
+            // Log warning for missing status definition
+            if (statuses.length > 0) {
+                console.warn(`PartStatusRenderer: Status "${value}" not found in partStatuses array or has invalid color definition`);
+            }
+        }
+
+        // Ensure display value is safe
+        if (typeof value !== 'string') {
+            displayValue = String(value || '');
+        }
+
+    } catch (error) {
+        // Catch any unexpected errors and provide fallback
+        console.error('PartStatusRenderer: Error processing status definition:', error);
+        colorClass = 'bg-gray-400';
+        displayValue = String(value || 'Unknown');
+    }
 
     return (
-        <div className="flex items-center gap-2">
-            <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: statusDef?.color || "#888" }}
-            />
-            <span className="text-xs">{value}</span>
+        <div className="flex items-center justify-center h-full w-full gap-1.5 px-1" title={displayValue}>
+            <div className={`w-2.5 h-2.5 rounded-full ${colorClass} shadow-sm ring-1 ring-black/10 flex-shrink-0`}></div>
         </div>
     );
 };
@@ -216,13 +266,27 @@ export const getOrdersColumns = (): ColDef<PendingRow>[] => [
     },
 ];
 
-export const getMainSheetColumns = (): ColDef<PendingRow>[] => [
+export const getMainSheetColumns = (partStatuses: PartStatusDef[] = []): ColDef<PendingRow>[] => [
     ...getBaseColumns(),
     {
         headerName: "PART STATUS",
         field: "partStatus",
+        width: 70,
+        editable: true,
         cellRenderer: PartStatusRenderer,
-        width: 120,
+        cellRendererParams: {
+            partStatuses: Array.isArray(partStatuses) ? partStatuses : [] // Enhanced null safety
+        },
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+            // Enhanced error handling for dropdown values
+            values: Array.isArray(partStatuses) && partStatuses.length > 0
+                ? partStatuses
+                    .filter(s => s && typeof s.label === 'string') // Filter out invalid entries
+                    .map(s => s.label)
+                : [] // Empty array if no valid statuses
+        },
+        cellClass: 'flex items-center justify-center'
     },
 ];
 
