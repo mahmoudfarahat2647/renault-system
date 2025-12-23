@@ -16,8 +16,7 @@ import {
     Calendar as CalendarIcon,
     User,
     Car,
-    FileText,
-    History,
+    History as HistoryIcon,
     Package,
     MessageSquare,
 } from "lucide-react";
@@ -340,20 +339,21 @@ export const BookingCalendarModal = ({
                         <Input
                             value={bookingNote}
                             onChange={(e) => setBookingNote(e.target.value)}
-                            placeholder="Add a note..."
-                            className="flex-1 bg-transparent border-b border-white/10 rounded-none focus:ring-0 px-0 h-10 text-gray-400 placeholder:text-gray-800"
+                            placeholder={selectedRows.length === 0 ? "View Mode: History" : "Add a note..."}
+                            disabled={selectedRows.length === 0}
+                            className="flex-1 bg-transparent border-b border-white/10 rounded-none focus:ring-0 px-0 h-10 text-gray-400 placeholder:text-gray-800 disabled:opacity-50"
                         />
                         <Button
                             onClick={handleConfirmBooking}
-                            disabled={!!searchQuery}
+                            disabled={!!searchQuery || selectedRows.length === 0}
                             className={cn(
                                 "h-10 px-8 rounded-full font-medium transition-all text-xs tracking-wider border",
-                                searchQuery
+                                (searchQuery || selectedRows.length === 0)
                                     ? "bg-transparent border-white/5 text-gray-700 cursor-not-allowed"
                                     : "bg-white text-black border-white hover:bg-gray-200"
                             )}
                         >
-                            {searchQuery ? "Clear Search" : "Book Date"}
+                            {selectedRows.length === 0 ? "View Only" : (searchQuery ? "Clear Search" : "Book Date")}
                         </Button>
                     </div>
                 </div>
@@ -471,7 +471,7 @@ export const BookingCalendarModal = ({
                     {/* Section 3: History Footer */}
                     <div className="p-6 bg-[#0e0e10] border-t border-white/5 space-y-3">
                         <div className="flex items-center gap-2 text-gray-500 mb-2">
-                            <History className="h-3 w-3" />
+                            <HistoryIcon className="h-3 w-3" />
                             <span className="text-[10px] uppercase tracking-widest font-bold">Booking History ({activeCustomerHistoryDates.length})</span>
                         </div>
 

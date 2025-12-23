@@ -20,8 +20,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
-import { Calendar, Archive, RotateCcw, Filter, Download, Trash2 } from "lucide-react";
+import { Calendar, Archive, RotateCcw, Filter, Download, Trash2, History as HistoryIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BookingPage() {
@@ -138,35 +139,38 @@ export default function BookingPage() {
     };
 
     const handleRebooking = () => {
-        if (selectedRows.length !== 1) {
-            toast.error("Please select exactly one booking to reschedule");
+        const vinCount = new Set(selectedRows.map(r => r.vin)).size;
+        if (vinCount > 1) {
+            toast.error("Please select bookings for only one VIN at a time");
             return;
         }
+
         const row = selectedRows[0];
-        // Use customer name or VIN as the initial search term to show history
-        setRebookingSearchTerm(row.vin || row.customerName || "");
+        // Use VIN or customer name as search term if available, otherwise empty for History
+        setRebookingSearchTerm(row?.vin || row?.customerName || "");
         setIsRebookingModalOpen(true);
     };
 
     const handleConfirmRebooking = (newDate: string, newNote: string) => {
-        if (selectedRows.length !== 1) return;
-        const row = selectedRows[0];
-        const oldDate = row.bookingDate || "Unknown Date";
+        if (selectedRows.length === 0) return;
 
-        // Create a history log entry in the note
-        const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
-        const updatedNote = row.bookingNote
-            ? `${row.bookingNote}\n[System]: ${historyLog} ${newNote}`
-            : `[System]: ${historyLog} ${newNote}`;
+        // Update all selected rows
+        selectedRows.forEach(row => {
+            const oldDate = row.bookingDate || "Unknown Date";
+            const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
+            const updatedNote = row.bookingNote
+                ? `${row.bookingNote}\n[System]: ${historyLog} ${newNote}`
+                : `[System]: ${historyLog} ${newNote}`;
 
-        updateOrder(row.id, {
-            bookingDate: newDate,
-            bookingNote: updatedNote.trim()
+            updateOrder(row.id, {
+                bookingDate: newDate,
+                bookingNote: updatedNote.trim()
+            });
         });
 
         setIsRebookingModalOpen(false);
         setSelectedRows([]);
-        toast.success("Booking rescheduled successfully");
+        toast.success(`Rescheduled ${selectedRows.length} booking(s) successfully`);
     };
 
     return (
@@ -219,14 +223,28 @@ export default function BookingPage() {
                             Archive
                         </Button>
                         <Button
-                            variant="outline"
+                            variant={selectedRows.length === 0 ? "outline" : "outline"}
                             size="sm"
-                            className="text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10 border-renault-yellow/20"
+                            className={cn(
+                                "border-renault-yellow/20",
+                                selectedRows.length === 0
+                                    ? "text-gray-400"
+                                    : "text-renault-yellow hover:text-renault-yellow/80 hover:bg-renault-yellow/10"
+                            )}
                             onClick={handleRebooking}
-                            disabled={selectedRows.length !== 1}
+                            disabled={new Set(selectedRows.map(r => r.vin)).size > 1}
                         >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Rebooking
+                            {selectedRows.length === 0 ? (
+                                <>
+                                    <HistoryIcon className="h-4 w-4 mr-1" />
+                                    History
+                                </>
+                            ) : (
+                                <>
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    Rebooking
+                                </>
+                            )}
                         </Button>
                         <Button
                             variant="outline"

@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { Input } from "@/components/ui/input";
 import type { PendingRow } from "@/types";
-import { Phone, Calendar, Filter, Download, Trash2 } from "lucide-react";
+import { Phone, Calendar, Filter, Download, Trash2, History as HistoryIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CallListPage() {
@@ -81,10 +81,6 @@ export default function CallListPage() {
     };
 
     const handleOpenBookingModal = () => {
-        if (selectedRows.length === 0) {
-            toast.error("Please select at least one row");
-            return;
-        }
         setIsBookingModalOpen(true);
     };
 
@@ -165,13 +161,22 @@ export default function CallListPage() {
                         <div className="flex-1" />
 
                         <Button
-                            variant="renault"
+                            variant={selectedRows.length === 0 ? "outline" : "renault"}
                             size="sm"
                             onClick={handleOpenBookingModal}
-                            disabled={selectedRows.length === 0}
+                            disabled={new Set(selectedRows.map(r => r.vin)).size > 1}
                         >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Booking
+                            {selectedRows.length === 0 ? (
+                                <>
+                                    <HistoryIcon className="h-4 w-4 mr-1" />
+                                    History
+                                </>
+                            ) : (
+                                <>
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    Booking
+                                </>
+                            )}
                         </Button>
                     </div>
                 </CardContent>
