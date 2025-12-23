@@ -39,9 +39,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 
 export default function MainSheetPage() {
-    const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder, deleteOrders } = useAppStore();
+    const { rowData, sendToCallList, partStatuses, updatePartStatus, updateOrder, deleteOrders, sendToBooking } = useAppStore();
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
     const [isLocked, setIsLocked] = useState(true); // Locked by default
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
@@ -53,6 +54,9 @@ export default function MainSheetPage() {
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
     const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
+
+    // Booking Modal State
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
     const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -220,6 +224,13 @@ export default function MainSheetPage() {
         toast.success(`${ids.length} row(s) deleted`);
     };
 
+    const handleConfirmBooking = (date: string, note: string, status?: string) => {
+        const ids = selectedRows.map((r) => r.id);
+        sendToBooking(ids, date, note, status);
+        setSelectedRows([]);
+        toast.success(`${ids.length} row(s) sent to Booking`);
+    };
+
     return (
         <TooltipProvider>
             <div className="space-y-4">
@@ -300,7 +311,13 @@ export default function MainSheetPage() {
 
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-green-500/80 hover:text-green-500 hover:bg-green-500/10">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-green-500/80 hover:text-green-500 hover:bg-green-500/10"
+                                            disabled={isLocked || selectedRows.length === 0}
+                                            onClick={() => setIsBookingModalOpen(true)}
+                                        >
                                             <Calendar className="h-4 w-4" />
                                         </Button>
                                     </TooltipTrigger>
@@ -448,6 +465,14 @@ export default function MainSheetPage() {
                 onOpenChange={setAttachmentModalOpen}
                 initialPath={currentAttachmentRow?.attachmentPath || ""}
                 onSave={handleSaveAttachment}
+            />
+
+            {/* Booking Calendar Modal */}
+            <BookingCalendarModal
+                open={isBookingModalOpen}
+                onOpenChange={setIsBookingModalOpen}
+                onConfirm={handleConfirmBooking}
+                selectedRows={selectedRows}
             />
         </TooltipProvider>
     );

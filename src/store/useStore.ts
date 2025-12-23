@@ -238,9 +238,14 @@ export const useAppStore = create<AppState & AppActions>()(
 
             sendToBooking: (ids, bookingDate, bookingNote, bookingStatus) => {
                 set((state) => {
-                    const rowsToMove = state.callRowData.filter((r) =>
-                        ids.includes(r.id)
-                    );
+                    // Check all three possible sources: Main Sheet, Orders, and Call List
+                    const rowsFromMainSheet = state.rowData.filter((r) => ids.includes(r.id));
+                    const rowsFromOrders = state.ordersRowData.filter((r) => ids.includes(r.id));
+                    const rowsFromCallList = state.callRowData.filter((r) => ids.includes(r.id));
+
+                    // Combine all found rows
+                    const rowsToMove = [...rowsFromMainSheet, ...rowsFromOrders, ...rowsFromCallList];
+
                     const updatedRows = rowsToMove.map((r) => ({
                         ...r,
                         status: "Booked" as const,
@@ -251,6 +256,8 @@ export const useAppStore = create<AppState & AppActions>()(
                     }));
 
                     return {
+                        rowData: state.rowData.filter((r) => !ids.includes(r.id)),
+                        ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
                         callRowData: state.callRowData.filter((r) => !ids.includes(r.id)),
                         bookingRowData: [...state.bookingRowData, ...updatedRows],
                     };

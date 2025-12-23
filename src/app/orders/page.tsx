@@ -59,6 +59,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 
 export default function OrdersPage() {
     const {
@@ -74,7 +75,8 @@ export default function OrdersPage() {
         removeModel,
         repairSystems,
         addRepairSystem,
-        removeRepairSystem
+        removeRepairSystem,
+        sendToBooking
     } = useAppStore();
 
     const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -94,6 +96,9 @@ export default function OrdersPage() {
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
     const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
+
+    // Booking Modal State
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -427,6 +432,13 @@ export default function OrdersPage() {
         toast.success("Committed to Main Sheet");
     };
 
+    const handleConfirmBooking = (date: string, note: string, status?: string) => {
+        const ids = selectedRows.map((r) => r.id);
+        sendToBooking(ids, date, note, status);
+        setSelectedRows([]);
+        toast.success(`${ids.length} order(s) sent to Booking`);
+    };
+
     const countdown = useMemo(() => {
         if (formData.repairSystem === "ضمان") {
             return getCalculatorValues(formData.startWarranty);
@@ -543,6 +555,7 @@ export default function OrdersPage() {
                                             variant="ghost"
                                             className="text-green-500/80 hover:text-green-500 h-8 w-8"
                                             disabled={selectedRows.length === 0}
+                                            onClick={() => setIsBookingModalOpen(true)}
                                         >
                                             <Calendar className="h-3.5 w-3.5" />
                                         </Button>
@@ -1208,6 +1221,14 @@ Example:
                     onOpenChange={setIsBulkAttachmentModalOpen}
                     initialPath=""
                     onSave={handleSaveBulkAttachment}
+                />
+
+                {/* Booking Calendar Modal */}
+                <BookingCalendarModal
+                    open={isBookingModalOpen}
+                    onOpenChange={setIsBookingModalOpen}
+                    onConfirm={handleConfirmBooking}
+                    selectedRows={selectedRows}
                 />
             </div >
         </TooltipProvider >
