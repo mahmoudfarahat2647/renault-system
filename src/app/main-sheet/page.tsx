@@ -6,6 +6,7 @@ import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid
 import { getMainSheetColumns } from "@/components/shared/GridConfig";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
+import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -48,8 +49,10 @@ export default function MainSheetPage() {
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
     const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+    const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
 
     const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -67,6 +70,12 @@ export default function MainSheetPage() {
         setReminderModalOpen(true);
     }, []);
 
+    // Callback for Attachment Icon Click
+    const handleAttachClick = useCallback((row: PendingRow) => {
+        setCurrentAttachmentRow(row);
+        setAttachmentModalOpen(true);
+    }, []);
+
     const handleSaveNote = (content: string) => {
         if (currentNoteRow) {
             updateOrder(currentNoteRow.id, { actionNote: content });
@@ -81,7 +90,17 @@ export default function MainSheetPage() {
         }
     };
 
-    const columns = useMemo(() => getMainSheetColumns(partStatuses, handleNoteClick, handleReminderClick), [partStatuses, handleNoteClick, handleReminderClick]);
+    const handleSaveAttachment = (path: string | undefined) => {
+        if (currentAttachmentRow) {
+            updateOrder(currentAttachmentRow.id, {
+                attachmentPath: path,
+                hasAttachment: !!path
+            });
+            toast.success(path ? "Attachment linked" : "Attachment cleared");
+        }
+    };
+
+    const columns = useMemo(() => getMainSheetColumns(partStatuses, handleNoteClick, handleReminderClick, handleAttachClick), [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
     // Auto-lock after 5 minutes of inactivity
     const resetAutoLockTimer = useCallback(() => {
@@ -416,12 +435,19 @@ export default function MainSheetPage() {
                 onSave={handleSaveNote}
             />
 
-            {/* Reminder Edit Modal */}
             <EditReminderModal
                 open={reminderModalOpen}
                 onOpenChange={setReminderModalOpen}
                 initialData={currentReminderRow?.reminder}
                 onSave={handleSaveReminder}
+            />
+
+            {/* Attachment Edit Modal */}
+            <EditAttachmentModal
+                open={attachmentModalOpen}
+                onOpenChange={setAttachmentModalOpen}
+                initialPath={currentAttachmentRow?.attachmentPath || ""}
+                onSave={handleSaveAttachment}
             />
         </TooltipProvider>
     );

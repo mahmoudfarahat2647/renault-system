@@ -6,6 +6,7 @@ import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid
 import { getOrdersColumns } from "@/components/shared/GridConfig";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
+import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -81,14 +82,15 @@ export default function OrdersPage() {
     const [bulkText, setBulkText] = useState("");
     const [isPersonalBulkMode, setIsPersonalBulkMode] = useState(false);
     const [personalBulkText, setPersonalBulkText] = useState("");
-    const [showSetPathDialog, setShowSetPathDialog] = useState(false);
-    const [attachmentPath, setAttachmentPath] = useState("");
+
 
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
     const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+    const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -121,21 +123,36 @@ export default function OrdersPage() {
         setReminderModalOpen(true);
     }, []);
 
+    const handleAttachClick = React.useCallback((row: PendingRow) => {
+        setCurrentAttachmentRow(row);
+        setAttachmentModalOpen(true);
+    }, []);
+
     const handleSaveNote = (content: string) => {
         if (currentNoteRow) {
             updateOrder(currentNoteRow.id, { actionNote: content });
-            toast.success("Note saved");
+            toast.success("Note updated");
         }
     };
 
-    const handleSaveReminder = (data: { date: string; time: string; subject: string } | undefined) => {
+    const handleSaveReminder = (reminder: { date: string; time: string; subject: string } | undefined) => {
         if (currentReminderRow) {
-            updateOrder(currentReminderRow.id, { reminder: data });
-            toast.success(data ? "Reminder set" : "Reminder cleared");
+            updateOrder(currentReminderRow.id, { reminder });
+            toast.success(reminder ? "Reminder set" : "Reminder cleared");
         }
     };
 
-    const columns = useMemo(() => getOrdersColumns(handleNoteClick, handleReminderClick), [handleNoteClick, handleReminderClick]);
+    const handleSaveAttachment = (path: string | undefined) => {
+        if (currentAttachmentRow) {
+            updateOrder(currentAttachmentRow.id, {
+                attachmentPath: path,
+                hasAttachment: !!path
+            });
+            toast.success(path ? "Attachment linked" : "Attachment cleared");
+        }
+    };
+
+    const columns = useMemo(() => getOrdersColumns(handleNoteClick, handleReminderClick, handleAttachClick), [handleNoteClick, handleReminderClick, handleAttachClick]);
 
     const handleSelectionChanged = (rows: PendingRow[]) => {
         setSelectedRows(rows);
@@ -397,29 +414,6 @@ export default function OrdersPage() {
         toast.success("Committed to Main Sheet");
     };
 
-    const handleSetPath = () => {
-        setShowSetPathDialog(true);
-    };
-
-    const applyPathToSelectedRows = () => {
-        if (!attachmentPath.trim()) {
-            toast.error("Please enter a valid path");
-            return;
-        }
-
-        // Update all selected rows with the attachment path
-        selectedRows.forEach(row => {
-            updateOrder(row.id, {
-                attachmentPath: attachmentPath.trim(),
-                hasAttachment: true
-            });
-        });
-
-        toast.success(`Path applied to ${selectedRows.length} row(s)`);
-        setShowSetPathDialog(false);
-        setAttachmentPath("");
-    };
-
     const countdown = useMemo(() => {
         if (formData.repairSystem === "ضمان") {
             return getCalculatorValues(formData.startWarranty);
@@ -555,20 +549,7 @@ export default function OrdersPage() {
                                     <TooltipContent>Filter</TooltipContent>
                                 </Tooltip>
 
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="text-blue-400 hover:text-blue-300 h-8 w-8"
-                                            onClick={handleSetPath}
-                                            disabled={selectedRows.length === 0}
-                                        >
-                                            <Folder className="h-3.5 w-3.5" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Set Path</TooltipContent>
-                                </Tooltip>
+
                             </div>
 
                             <div className="flex items-center gap-1.5">
@@ -1170,51 +1151,7 @@ Example:
                     </DialogContent>
                 </Dialog>
 
-                {/* Set Path Dialog */}
-                <Dialog open={showSetPathDialog} onOpenChange={setShowSetPathDialog}>
-                    <DialogContent className="sm:max-w-[500px] bg-[#1c1c1e] border border-white/10 text-white">
-                        <DialogHeader>
-                            <DialogTitle>Set Attachment Path</DialogTitle>
-                            <DialogDescription className="text-gray-400">
-                                Set a base directory path for selected rows. This will overwrite existing paths.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <label htmlFor="path" className="text-right text-sm font-medium">
-                                    Path
-                                </label>
-                                <div className="col-span-3">
-                                    <Input
-                                        id="path"
-                                        placeholder="C:\Users\..."
-                                        value={attachmentPath}
-                                        onChange={(e) => setAttachmentPath(e.target.value)}
-                                        className="bg-[#2c2c2e] border-white/10"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        This path will be applied to {selectedRows.length} selected row(s)
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                variant="ghost"
-                                onClick={() => setShowSetPathDialog(false)}
-                                className="text-gray-400 hover:text-white"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={applyPathToSelectedRows}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                            >
-                                Apply Path
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+
 
                 {/* Note Edit Modal */}
                 <EditNoteModal
@@ -1224,12 +1161,19 @@ Example:
                     onSave={handleSaveNote}
                 />
 
-                {/* Reminder Edit Modal */}
                 <EditReminderModal
                     open={reminderModalOpen}
                     onOpenChange={setReminderModalOpen}
                     initialData={currentReminderRow?.reminder}
                     onSave={handleSaveReminder}
+                />
+
+                {/* Attachment Edit Modal */}
+                <EditAttachmentModal
+                    open={attachmentModalOpen}
+                    onOpenChange={setAttachmentModalOpen}
+                    initialPath={currentAttachmentRow?.attachmentPath || ""}
+                    onSave={handleSaveAttachment}
                 />
             </div>
         </TooltipProvider>

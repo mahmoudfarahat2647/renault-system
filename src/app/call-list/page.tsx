@@ -6,6 +6,7 @@ import { DynamicDataGrid as DataGrid } from "@/components/shared/DynamicDataGrid
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { EditNoteModal } from "@/components/shared/EditNoteModal";
 import { EditReminderModal } from "@/components/shared/EditReminderModal";
+import { EditAttachmentModal } from "@/components/shared/EditAttachmentModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoLabel } from "@/components/shared/InfoLabel";
@@ -34,8 +35,10 @@ export default function CallListPage() {
     // Note Modal State
     const [noteModalOpen, setNoteModalOpen] = useState(false);
     const [reminderModalOpen, setReminderModalOpen] = useState(false);
+    const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
     const [currentNoteRow, setCurrentNoteRow] = useState<PendingRow | null>(null);
     const [currentReminderRow, setCurrentReminderRow] = useState<PendingRow | null>(null);
+    const [currentAttachmentRow, setCurrentAttachmentRow] = useState<PendingRow | null>(null);
 
     // Callback for Note Icon Click
     const handleNoteClick = React.useCallback((row: PendingRow) => {
@@ -47,6 +50,12 @@ export default function CallListPage() {
     const handleReminderClick = React.useCallback((row: PendingRow) => {
         setCurrentReminderRow(row);
         setReminderModalOpen(true);
+    }, []);
+
+    // Callback for Attachment Icon Click
+    const handleAttachClick = React.useCallback((row: PendingRow) => {
+        setCurrentAttachmentRow(row);
+        setAttachmentModalOpen(true);
     }, []);
 
     const handleSaveNote = (content: string) => {
@@ -63,7 +72,17 @@ export default function CallListPage() {
         }
     };
 
-    const columns = useMemo(() => getBaseColumns(handleNoteClick, handleReminderClick), [handleNoteClick, handleReminderClick]);
+    const handleSaveAttachment = (path: string | undefined) => {
+        if (currentAttachmentRow) {
+            updateOrder(currentAttachmentRow.id, {
+                attachmentPath: path,
+                hasAttachment: !!path
+            });
+            toast.success(path ? "Attachment linked" : "Attachment cleared");
+        }
+    };
+
+    const columns = useMemo(() => getBaseColumns(handleNoteClick, handleReminderClick, handleAttachClick), [handleNoteClick, handleReminderClick, handleAttachClick]);
 
     // Count unique VINs
     const uniqueVins = new Set(callRowData.map((r) => r.vin)).size;
@@ -233,6 +252,14 @@ export default function CallListPage() {
                 onOpenChange={setReminderModalOpen}
                 initialData={currentReminderRow?.reminder}
                 onSave={handleSaveReminder}
+            />
+
+            {/* Attachment Edit Modal */}
+            <EditAttachmentModal
+                open={attachmentModalOpen}
+                onOpenChange={setAttachmentModalOpen}
+                initialPath={currentAttachmentRow?.attachmentPath || ""}
+                onSave={handleSaveAttachment}
             />
         </div>
     );

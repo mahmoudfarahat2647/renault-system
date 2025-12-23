@@ -39,6 +39,7 @@ interface AppActions {
 
     // History
     addCommit: (actionName: string) => void;
+    restoreToCommit: (commitId: string) => void;
     undo: () => void;
     redo: () => void;
     clearHistory: () => void;
@@ -322,10 +323,34 @@ export const useAppStore = create<AppState & AppActions>()(
                     snapshot,
                 };
 
-                set((state) => ({
-                    commits: [...state.commits.slice(-49), commit],
-                    redos: [],
-                }));
+                set((state) => {
+                    // Filter history to keep only last 48 hours
+                    const fortyEightHoursAgo = new Date();
+                    fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
+
+                    const filteredCommits = state.commits.filter(c =>
+                        new Date(c.timestamp) > fortyEightHoursAgo
+                    );
+
+                    return {
+                        commits: [...filteredCommits.slice(-49), commit],
+                        redos: [],
+                    };
+                });
+            },
+
+            restoreToCommit: (commitId) => {
+                const state = get();
+                const targetCommit = state.commits.find(c => c.id === commitId);
+
+                if (targetCommit) {
+                    set({
+                        ...targetCommit.snapshot,
+                        redos: []
+                    });
+                    // Add a restoration record to history
+                    get().addCommit(`Restored to: ${targetCommit.actionName}`);
+                }
             },
 
             undo: () => {
@@ -391,9 +416,10 @@ export const useAppStore = create<AppState & AppActions>()(
             },
 
             commitSave: () => {
-                // Clear both past and future history
-                // This represents an explicit save action by the user
-                set({ commits: [], redos: [] });
+                // Manual checkpoint
+                get().addCommit("Manual Checkpoint");
+                // Clear future redo history since we branch from here
+                set({ redos: [] });
             },
 
             // Todos
@@ -517,6 +543,7 @@ export const useAppStore = create<AppState & AppActions>()(
                 repairSystems: state.repairSystems,
                 noteTemplates: state.noteTemplates,
                 reminderTemplates: state.reminderTemplates,
+                commits: state.commits, // Persist history for crash protection
             }),
         }
     )

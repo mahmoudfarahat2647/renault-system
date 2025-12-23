@@ -29,8 +29,13 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
     return (
         <div className="flex items-center gap-3 h-full px-2">
             <button
-                className={`transition-colors ${data.hasAttachment ? "text-renault-yellow" : "text-gray-600 hover:text-gray-400"}`}
+                className={`transition-colors ${data.hasAttachment ? "text-indigo-400" : "text-gray-600 hover:text-gray-400"}`}
                 title="Attachment"
+                onClick={() => {
+                    if (params.colDef?.cellRendererParams?.onAttachClick) {
+                        params.colDef.cellRendererParams.onAttachClick(data);
+                    }
+                }}
             >
                 <Paperclip className="h-3.5 w-3.5" />
             </button>
@@ -170,159 +175,177 @@ export const StatusRenderer = (params: ICellRendererParams<PendingRow>) => {
 };
 
 // Common column definitions
-export const getBaseColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
-    {
-        headerName: "",
-        field: "id",
-        checkboxSelection: true,
-        headerCheckboxSelection: true,
-        width: 50,
-        maxWidth: 50,
-        sortable: false,
-        filter: false,
-        resizable: false,
-        pinned: "left",
-        suppressMenu: true,
-        valueFormatter: () => "", // Hide the ID number
-        cellClass: "flex items-center justify-center",
-    },
-    {
-        headerName: "ACTIONS",
-        field: "id",
-        cellRenderer: ActionCellRenderer,
-        cellRendererParams: {
-            onNoteClick,
-            onReminderClick,
+export const getBaseColumns = (
+    onNoteClick?: (row: PendingRow) => void,
+    onReminderClick?: (row: PendingRow) => void,
+    onAttachClick?: (row: PendingRow) => void
+): ColDef<PendingRow>[] => [
+        {
+            headerName: "",
+            field: "id",
+            checkboxSelection: true,
+            headerCheckboxSelection: true,
+            width: 50,
+            maxWidth: 50,
+            sortable: false,
+            filter: false,
+            resizable: false,
+            pinned: "left",
+            suppressMenu: true,
+            valueFormatter: () => "", // Hide the ID number
+            cellClass: "flex items-center justify-center",
         },
-        width: 100,
-        maxWidth: 100,
-        sortable: false,
-        filter: false,
-        suppressMenu: true,
-    },
-    {
-        headerName: "STATS",
-        field: "status",
-        cellRenderer: StatusRenderer,
-        width: 80,
-    },
-    {
-        headerName: "R/DATE",
-        field: "rDate",
-        width: 100,
-    },
-    {
-        headerName: "CUSTOMER NAME",
-        field: "customerName",
-        filter: "agTextColumnFilter",
-        minWidth: 140,
-    },
-    {
-        headerName: "VIN NO/",
-        field: "vin",
-        cellRenderer: VinCellRenderer,
-        filter: "agTextColumnFilter",
-        minWidth: 160,
-    },
-    {
-        headerName: "MOBILE",
-        field: "mobile",
-        width: 110,
-    },
-    {
-        headerName: "CNTR RDG",
-        field: "cntrRdg",
-        width: 90,
-    },
-    {
-        headerName: "SAB NO.",
-        field: "sabNumber",
-        width: 110,
-    },
-    {
-        headerName: "ACCEPTED BY",
-        field: "acceptedBy",
-        width: 120,
-    },
-    {
-        headerName: "MODEL",
-        field: "model",
-        width: 100,
-    },
-    {
-        headerName: "PART NUMBER",
-        field: "partNumber",
-        filter: "agTextColumnFilter",
-        minWidth: 120,
-    },
-    {
-        headerName: "DESCRIPTION",
-        field: "description",
-        filter: "agTextColumnFilter",
-        minWidth: 180,
-    },
-    {
-        headerName: "نظام اصلاح",
-        field: "repairSystem",
-        width: 100,
-    },
-    {
-        headerName: "مدة ضمان", // Or "WARRANTY REMAIN" based on image? Keeping Arabic as it matches some image texts usually.
-        field: "remainTime",
-        cellRenderer: WarrantyRenderer,
-        width: 100,
-    },
-    {
-        headerName: "ACTION NO.",
-        field: "actionNote",
-        width: 100,
-    },
-];
-
-export const getOrdersColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
-    ...getBaseColumns(onNoteClick, onReminderClick),
-    {
-        headerName: "REQUESTER",
-        field: "requester",
-        width: 120,
-    },
-];
-
-export const getMainSheetColumns = (partStatuses: PartStatusDef[] = [], onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
-    ...getBaseColumns(onNoteClick, onReminderClick),
-    {
-        headerName: "PART STATUS",
-        field: "partStatus",
-        width: 70,
-        editable: true,
-        cellRenderer: PartStatusRenderer,
-        cellRendererParams: {
-            partStatuses: Array.isArray(partStatuses) ? partStatuses : [] // Enhanced null safety
+        {
+            headerName: "ACTIONS",
+            field: "id",
+            cellRenderer: ActionCellRenderer,
+            cellRendererParams: {
+                onNoteClick,
+                onReminderClick,
+                onAttachClick,
+            },
+            width: 100,
+            maxWidth: 100,
+            sortable: false,
+            filter: false,
+            suppressMenu: true,
         },
-        cellEditor: 'agSelectCellEditor',
-        cellEditorParams: {
-            // Enhanced error handling for dropdown values
-            values: Array.isArray(partStatuses) && partStatuses.length > 0
-                ? partStatuses
-                    .filter(s => s && typeof s.label === 'string') // Filter out invalid entries
-                    .map(s => s.label)
-                : [] // Empty array if no valid statuses
+        {
+            headerName: "STATS",
+            field: "status",
+            cellRenderer: StatusRenderer,
+            width: 80,
         },
-        cellClass: 'flex items-center justify-center'
-    },
-];
+        {
+            headerName: "R/DATE",
+            field: "rDate",
+            width: 100,
+        },
+        {
+            headerName: "CUSTOMER NAME",
+            field: "customerName",
+            filter: "agTextColumnFilter",
+            minWidth: 140,
+        },
+        {
+            headerName: "VIN NO/",
+            field: "vin",
+            cellRenderer: VinCellRenderer,
+            filter: "agTextColumnFilter",
+            minWidth: 160,
+        },
+        {
+            headerName: "MOBILE",
+            field: "mobile",
+            width: 110,
+        },
+        {
+            headerName: "CNTR RDG",
+            field: "cntrRdg",
+            width: 90,
+        },
+        {
+            headerName: "SAB NO.",
+            field: "sabNumber",
+            width: 110,
+        },
+        {
+            headerName: "ACCEPTED BY",
+            field: "acceptedBy",
+            width: 120,
+        },
+        {
+            headerName: "MODEL",
+            field: "model",
+            width: 100,
+        },
+        {
+            headerName: "PART NUMBER",
+            field: "partNumber",
+            filter: "agTextColumnFilter",
+            minWidth: 120,
+        },
+        {
+            headerName: "DESCRIPTION",
+            field: "description",
+            filter: "agTextColumnFilter",
+            minWidth: 180,
+        },
+        {
+            headerName: "نظام اصلاح",
+            field: "repairSystem",
+            width: 100,
+        },
+        {
+            headerName: "مدة ضمان", // Or "WARRANTY REMAIN" based on image? Keeping Arabic as it matches some image texts usually.
+            field: "remainTime",
+            cellRenderer: WarrantyRenderer,
+            width: 100,
+        },
+        {
+            headerName: "ACTION NO.",
+            field: "actionNote",
+            width: 100,
+        },
+    ];
 
-export const getBookingColumns = (onNoteClick?: (row: PendingRow) => void, onReminderClick?: (row: PendingRow) => void): ColDef<PendingRow>[] => [
-    ...getBaseColumns(onNoteClick, onReminderClick),
-    {
-        headerName: "BOOKING DATE",
-        field: "bookingDate",
-        width: 130,
-        cellStyle: { color: "#22c55e", fontWeight: 500 },
-    },
-    {
-        headerName: "BOOKING NOTE",
-        field: "bookingNote",
-        width: 150,
-    },
-];
+export const getOrdersColumns = (
+    onNoteClick?: (row: PendingRow) => void,
+    onReminderClick?: (row: PendingRow) => void,
+    onAttachClick?: (row: PendingRow) => void
+): ColDef<PendingRow>[] => [
+        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+        {
+            headerName: "REQUESTER",
+            field: "requester",
+            width: 120,
+        },
+    ];
+
+export const getMainSheetColumns = (
+    partStatuses: PartStatusDef[] = [],
+    onNoteClick?: (row: PendingRow) => void,
+    onReminderClick?: (row: PendingRow) => void,
+    onAttachClick?: (row: PendingRow) => void
+): ColDef<PendingRow>[] => [
+        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+        {
+            headerName: "PART STATUS",
+            field: "partStatus",
+            width: 70,
+            editable: true,
+            cellRenderer: PartStatusRenderer,
+            cellRendererParams: {
+                partStatuses: Array.isArray(partStatuses) ? partStatuses : [] // Enhanced null safety
+            },
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: {
+                // Enhanced error handling for dropdown values
+                values: Array.isArray(partStatuses) && partStatuses.length > 0
+                    ? partStatuses
+                        .filter(s => s && typeof s.label === 'string') // Filter out invalid entries
+                        .map(s => s.label)
+                    : [] // Empty array if no valid statuses
+            },
+            cellClass: 'flex items-center justify-center'
+        },
+    ];
+
+export const getBookingColumns = (
+    onNoteClick?: (row: PendingRow) => void,
+    onReminderClick?: (row: PendingRow) => void,
+    onAttachClick?: (row: PendingRow) => void
+): ColDef<PendingRow>[] => [
+        ...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+        {
+            headerName: "BOOKING DATE",
+            field: "bookingDate",
+            width: 130,
+            cellStyle: { color: "#22c55e", fontWeight: 500 },
+        },
+        {
+            headerName: "BOOKING NOTE",
+            field: "bookingNote",
+            width: 150,
+        },
+    ];

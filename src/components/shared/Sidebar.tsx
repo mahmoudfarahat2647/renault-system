@@ -15,6 +15,7 @@ import {
     ChevronRight,
     User,
 } from "lucide-react";
+import { SettingsModal } from "./SettingsModal";
 
 interface NavItem {
     href: string;
@@ -58,6 +59,7 @@ const navItems: NavItem[] = [
 
 export const Sidebar = React.memo(function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const pathname = usePathname();
 
     return (
@@ -153,13 +155,14 @@ export const Sidebar = React.memo(function Sidebar() {
 
             {/* User Profile */}
             <div className="border-t border-white/10 p-4 bg-black/20">
-                <div
+                <button
+                    onClick={() => setSettingsOpen(true)}
                     className={cn(
-                        "flex items-center gap-3",
+                        "w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all text-left",
                         isCollapsed && "justify-center"
                     )}
                 >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center relative">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center relative flex-shrink-0">
                         <div className="absolute inset-0 rounded-full bg-renault-yellow/10 animate-pulse"></div>
                         <span className="text-xs font-bold text-renault-yellow">MF</span>
                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
@@ -170,8 +173,13 @@ export const Sidebar = React.memo(function Sidebar() {
                             <p className="text-xs text-gray-500 truncate">System Creator</p>
                         </div>
                     )}
-                </div>
+                </button>
             </div>
+
+            <SettingsModal
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+            />
         </aside>
     );
 });

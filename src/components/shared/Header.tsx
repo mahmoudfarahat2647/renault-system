@@ -4,11 +4,6 @@ import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAppStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
-import { PartStatusDef } from "@/types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { X, Plus } from "lucide-react";
 import {
     Search,
     Undo2,
@@ -16,30 +11,14 @@ import {
     RefreshCw,
     Save,
     Bell,
-    Settings,
-    Download,
+    X,
 } from "lucide-react";
 
 export const Header = React.memo(function Header() {
     const pathname = usePathname();
-    const [searchQuery, setSearchQuery] = useState("");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
-    const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-    const { commits, redos, undo, redo, clearHistory, commitSave } = useAppStore();
-
-    // Get page title from pathname
-    const getPageTitle = () => {
-        const routes: Record<string, string> = {
-            "/": "Dashboard",
-            "/orders": "Orders",
-            "/main-sheet": "Main Sheet",
-            "/call-list": "Call",
-            "/booking": "Booking",
-            "/archive": "Archive",
-        };
-        return routes[pathname] || "Dashboard";
-    };
+    const { commits, redos, undo, redo, commitSave } = useAppStore();
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -72,10 +51,8 @@ export const Header = React.memo(function Header() {
 
     return (
         <header className="flex items-center justify-between h-20 px-8 border-b border-white/5 bg-transparent shrink-0">
-            {/* Left: Page Title - Removed as it's often redundant with sidebar or dashboard header, but keeping cleaner if needed or just logo area space */}
-            <div className="flex items-center gap-4">
-                {/* Optional: Add Breadcrumbs or Back button here if deep navigation exists */}
-            </div>
+            {/* Left: Optional space */}
+            <div className="flex items-center gap-4" />
 
             {/* Center: Search */}
             <div className="flex-1 max-w-2xl mx-auto">
@@ -167,139 +144,8 @@ export const Header = React.memo(function Header() {
                         <Bell className="h-5 w-5" />
                         <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0a0b]" />
                     </button>
-
-                    <button
-                        onClick={() => setShowSettingsModal(true)}
-                        className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
-                    >
-                        <Settings className="h-5 w-5" />
-                    </button>
                 </div>
             </div>
-
-            {showSettingsModal && (
-                <SettingsModal
-                    onClose={() => setShowSettingsModal(false)}
-                />
-            )}
         </header>
     );
 });
-
-interface SettingsModalProps {
-    onClose: () => void;
-}
-
-const SettingsModal = ({ onClose }: SettingsModalProps) => {
-    const { partStatuses, addPartStatusDef, removePartStatusDef } = useAppStore();
-    const [newStatusLabel, setNewStatusLabel] = useState("");
-    const [selectedColor, setSelectedColor] = useState("bg-emerald-500");
-
-    // Predefined color palette
-    const colorPalette = [
-        "bg-emerald-500",
-        "bg-gray-800",
-        "bg-yellow-400",
-        "bg-amber-800",
-        "bg-red-500",
-        "bg-blue-500",
-        "bg-purple-500",
-        "bg-pink-500",
-        "bg-indigo-500",
-        "bg-green-500",
-        "bg-teal-500",
-        "bg-cyan-500",
-    ];
-
-    const handleAddStatus = () => {
-        if (!newStatusLabel.trim()) return;
-
-        const newStatus: PartStatusDef = {
-            id: Math.random().toString(36).substring(2, 9),
-            label: newStatusLabel.trim(),
-            color: selectedColor,
-        };
-
-        addPartStatusDef(newStatus);
-        setNewStatusLabel("");
-    };
-
-    const handleRemoveStatus = (id: string) => {
-        removePartStatusDef(id);
-    };
-
-    return (
-        <Dialog open onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-[#1c1c1e] border border-white/10 text-white">
-                <DialogHeader>
-                    <DialogTitle>Part Status Settings</DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                    {/* Add New Status */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-medium">Add New Status</h3>
-                        <div className="flex gap-2">
-                            <Input
-                                value={newStatusLabel}
-                                onChange={(e) => setNewStatusLabel(e.target.value)}
-                                placeholder="Enter status label"
-                                className="flex-1 bg-[#2c2c2e] border-white/10"
-                            />
-                            <Button
-                                onClick={handleAddStatus}
-                                disabled={!newStatusLabel.trim()}
-                                className="bg-renault-yellow hover:bg-renault-yellow/90 text-black"
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-
-                        {/* Color Palette */}
-                        <div className="space-y-2">
-                            <h4 className="text-xs font-medium text-gray-400">Select Color</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {colorPalette.map((color) => (
-                                    <button
-                                        key={color}
-                                        onClick={() => setSelectedColor(color)}
-                                        className={`w-6 h-6 rounded-full ${color} ${selectedColor === color
-                                                ? "ring-2 ring-white ring-offset-2 ring-offset-[#1c1c1e]"
-                                                : ""
-                                            }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Existing Statuses */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-medium">Existing Statuses</h3>
-                        <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                            {partStatuses.map((status) => (
-                                <div
-                                    key={status.id}
-                                    className="flex items-center justify-between p-3 bg-[#2c2c2e] rounded-lg"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-3 h-3 rounded-full ${status.color}`} />
-                                        <span className="text-sm">{status.label}</span>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleRemoveStatus(status.id)}
-                                        className="h-8 w-8 text-gray-400 hover:text-red-400"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
-};
