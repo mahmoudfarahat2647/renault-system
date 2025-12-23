@@ -3,6 +3,7 @@
 import React from "react";
 import { getVinColor } from "@/lib/utils";
 import type { PendingRow, PartStatusDef } from "@/types";
+import { useAppStore } from "@/store/useStore";
 import { Paperclip, StickyNote, History, Bell } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 
@@ -342,6 +343,16 @@ export const getBookingColumns = (
             field: "bookingDate",
             width: 130,
             cellStyle: { color: "#22c55e", fontWeight: 500 },
+        },
+        {
+            headerName: "STATUS",
+            field: "bookingStatus",
+            width: 70,
+            cellRenderer: PartStatusRenderer,
+            cellRendererParams: {
+                partStatuses: useAppStore.getState().bookingStatuses
+            },
+            cellClass: 'flex items-center justify-center'
         },
         {
             headerName: "BOOKING NOTE",

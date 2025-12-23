@@ -84,11 +84,10 @@ export default function CallListPage() {
         setIsBookingModalOpen(true);
     };
 
-    const handleConfirmBooking = (date: string, note: string) => {
+    const handleConfirmBooking = (date: string, note: string, status?: string) => {
         const ids = selectedRows.map((r) => r.id);
-        sendToBooking(ids, date, note);
+        sendToBooking(ids, date, note, status);
         setSelectedRows([]);
-        setIsBookingModalOpen(false);
         toast.success(`${ids.length} row(s) sent to Booking`);
     };
 

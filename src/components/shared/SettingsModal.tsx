@@ -14,6 +14,7 @@ import {
     Tag,
     Palette,
     History,
+    CalendarCheck,
     X,
     Plus,
     ChevronRight,
@@ -30,7 +31,7 @@ interface SettingsModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-type TabType = "part-statuses" | "theme-color" | "last-changes";
+type TabType = "part-statuses" | "booking-statuses" | "theme-color" | "last-changes";
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     const [activeTab, setActiveTab] = useState<TabType>("part-statuses");
@@ -38,6 +39,9 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
         partStatuses,
         addPartStatusDef,
         removePartStatusDef,
+        bookingStatuses,
+        addBookingStatusDef,
+        removeBookingStatusDef,
         commits
     } = useAppStore();
 
@@ -72,6 +76,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
     const navItems = [
         { id: "part-statuses", label: "Part Statuses", icon: Tag },
+        { id: "booking-statuses", label: "Booking Statuses", icon: CalendarCheck },
         { id: "theme-color", label: "Theme Color", icon: Palette },
         { id: "last-changes", label: "Last Changes", icon: History },
     ];
@@ -121,11 +126,13 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                         <div>
                             <h3 className="font-bold text-lg">
                                 {activeTab === "part-statuses" && "Part Status Management"}
+                                {activeTab === "booking-statuses" && "Booking Status Management"}
                                 {activeTab === "theme-color" && "System Appearance"}
                                 {activeTab === "last-changes" && "System History (Last 48h)"}
                             </h3>
                             <p className="text-xs text-gray-400">
                                 {activeTab === "part-statuses" && "Customize status labels and colors used in the grid."}
+                                {activeTab === "booking-statuses" && "Customize labels and colors for booking statuses."}
                                 {activeTab === "theme-color" && "Manage theme colors and UI preferences."}
                                 {activeTab === "last-changes" && "Review and restore recent changes."}
                             </p>
@@ -134,70 +141,39 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
                     <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                         {activeTab === "part-statuses" && (
-                            <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {/* Add New Status */}
-                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
-                                    <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Add New Status</h4>
-                                    <div className="flex gap-4">
-                                        <Input
-                                            value={newStatusLabel}
-                                            onChange={(e) => setNewStatusLabel(e.target.value)}
-                                            placeholder="Enter status label (e.g., In Transit)"
-                                            className="h-12 bg-black/40 border-white/10 rounded-xl focus:ring-renault-yellow/50"
-                                        />
-                                        <Button
-                                            onClick={handleAddStatus}
-                                            disabled={!newStatusLabel.trim()}
-                                            className="h-12 px-6 bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold rounded-xl transition-all active:scale-95"
-                                        >
-                                            <Plus className="h-5 w-5 mr-2" />
-                                            Add Status
-                                        </Button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <p className="text-xs font-medium text-gray-500 uppercase">Select Color Theme</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {colorPalette.map((color) => (
-                                                <button
-                                                    key={color}
-                                                    onClick={() => setSelectedColor(color)}
-                                                    className={cn(
-                                                        "w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 active:scale-90",
-                                                        color,
-                                                        selectedColor === color ? "ring-2 ring-white ring-offset-4 ring-offset-[#1c1c1e] scale-110" : "opacity-60 hover:opacity-100"
-                                                    )}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                            <StatusManagementSection
+                                title="Add New Part Status"
+                                managedTitle="Managed Part Statuses"
+                                statuses={partStatuses}
+                                onAdd={(label, color) => {
+                                    const newStatus: PartStatusDef = {
+                                        id: Math.random().toString(36).substring(2, 9),
+                                        label,
+                                        color,
+                                    };
+                                    addPartStatusDef(newStatus);
+                                }}
+                                onRemove={removePartStatusDef}
+                                colorPalette={colorPalette}
+                            />
+                        )}
 
-                                {/* List of Statuses */}
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-semibold text-white uppercase tracking-wider px-2">Managed Statuses</h4>
-                                    <div className="grid gap-3">
-                                        {partStatuses.map((status) => (
-                                            <div
-                                                key={status.id}
-                                                className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn("w-3 h-3 rounded-full shadow-lg", status.color)} />
-                                                    <span className="font-medium text-gray-200">{status.label}</span>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removePartStatusDef(status.id)}
-                                                    className="h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                        {activeTab === "booking-statuses" && (
+                            <StatusManagementSection
+                                title="Add New Booking Status"
+                                managedTitle="Managed Booking Statuses"
+                                statuses={bookingStatuses}
+                                onAdd={(label, color) => {
+                                    const newStatus: PartStatusDef = {
+                                        id: Math.random().toString(36).substring(2, 9),
+                                        label,
+                                        color,
+                                    };
+                                    addBookingStatusDef(newStatus);
+                                }}
+                                onRemove={removeBookingStatusDef}
+                                colorPalette={colorPalette}
+                            />
                         )}
 
                         {activeTab === "theme-color" && (
@@ -281,5 +257,96 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                 </div>
             </DialogContent>
         </Dialog>
+    );
+};
+
+interface StatusManagementSectionProps {
+    title: string;
+    managedTitle: string;
+    statuses: PartStatusDef[];
+    onAdd: (label: string, color: string) => void;
+    onRemove: (id: string) => void;
+    colorPalette: string[];
+}
+
+const StatusManagementSection = ({
+    title,
+    managedTitle,
+    statuses,
+    onAdd,
+    onRemove,
+    colorPalette
+}: StatusManagementSectionProps) => {
+    const [newLabel, setNewLabel] = useState("");
+    const [selectedColor, setSelectedColor] = useState("bg-emerald-500");
+
+    return (
+        <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Add New Status */}
+            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <h4 className="text-sm font-semibold text-white uppercase tracking-wider">{title}</h4>
+                <div className="flex gap-4">
+                    <Input
+                        value={newLabel}
+                        onChange={(e) => setNewLabel(e.target.value)}
+                        placeholder="Enter status label (e.g., In Transit)"
+                        className="h-12 bg-black/40 border-white/10 rounded-xl focus:ring-renault-yellow/50"
+                    />
+                    <Button
+                        onClick={() => {
+                            onAdd(newLabel, selectedColor);
+                            setNewLabel("");
+                        }}
+                        disabled={!newLabel.trim()}
+                        className="h-12 px-6 bg-renault-yellow hover:bg-renault-yellow/90 text-black font-bold rounded-xl transition-all active:scale-95"
+                    >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Status
+                    </Button>
+                </div>
+                <div className="space-y-3">
+                    <p className="text-xs font-medium text-gray-500 uppercase">Select Color Theme</p>
+                    <div className="flex flex-wrap gap-2">
+                        {colorPalette.map((color) => (
+                            <button
+                                key={color}
+                                onClick={() => setSelectedColor(color)}
+                                className={cn(
+                                    "w-8 h-8 rounded-full transition-all duration-200 hover:scale-110 active:scale-90",
+                                    color,
+                                    selectedColor === color ? "ring-2 ring-white ring-offset-4 ring-offset-[#1c1c1e] scale-110" : "opacity-60 hover:opacity-100"
+                                )}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* List of Statuses */}
+            <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-white uppercase tracking-wider px-2">{managedTitle}</h4>
+                <div className="grid gap-3">
+                    {statuses.map((status) => (
+                        <div
+                            key={status.id}
+                            className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className={cn("w-3 h-3 rounded-full shadow-lg", status.color)} />
+                                <span className="font-medium text-gray-200">{status.label}</span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onRemove(status.id)}
+                                className="h-9 w-9 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 };

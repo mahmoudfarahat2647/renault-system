@@ -50,7 +50,7 @@ import type { PendingRow } from "@/types";
 interface BookingCalendarModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onConfirm: (date: string, note: string) => void;
+    onConfirm: (date: string, note: string, status?: string) => void;
     selectedRows: PendingRow[];
     initialSearchTerm?: string;
 }
@@ -62,10 +62,11 @@ export const BookingCalendarModal = ({
     selectedRows,
     initialSearchTerm = "",
 }: BookingCalendarModalProps) => {
-    const { bookingRowData } = useAppStore();
+    const { bookingRowData, archiveRowData, bookingStatuses, updateBookingStatus } = useAppStore();
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [bookingNote, setBookingNote] = useState("");
+    const [preBookingStatus, setPreBookingStatus] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState(initialSearchTerm);
 
     // Track which sidebar item is selected for details view
@@ -78,13 +79,19 @@ export const BookingCalendarModal = ({
         if (open) {
             setSearchQuery(initialSearchTerm);
             setBookingNote("");
+            setPreBookingStatus(""); // Reset pre-booking status
             setSelectedBookingId(null);
         }
     }, [open, initialSearchTerm]);
 
+    // Combine current and archived bookings for full history on the calendar
+    const allBookings = useMemo(() => {
+        return [...bookingRowData, ...archiveRowData];
+    }, [bookingRowData, archiveRowData]);
+
     // Filter bookings for the past 2 years and by search query
     const filteredBookings = useMemo(() => {
-        return bookingRowData.filter((b) => {
+        return allBookings.filter((b) => {
             const bDate = new Date(b.bookingDate || "");
             const isInRange = isAfter(bDate, twoYearsAgo);
             if (!isInRange) return false;
@@ -100,7 +107,7 @@ export const BookingCalendarModal = ({
             }
             return true;
         });
-    }, [bookingRowData, twoYearsAgo, searchQuery]);
+    }, [allBookings, twoYearsAgo, searchQuery]);
 
     const searchMatchDates = useMemo(() => {
         if (!searchQuery) return new Set<string>();
@@ -109,14 +116,14 @@ export const BookingCalendarModal = ({
 
     const bookingsByDateMap = useMemo(() => {
         const map: Record<string, PendingRow[]> = {};
-        bookingRowData.forEach((b) => {
+        allBookings.forEach((b) => {
             if (b.bookingDate && isAfter(new Date(b.bookingDate), twoYearsAgo)) {
                 if (!map[b.bookingDate]) map[b.bookingDate] = [];
                 map[b.bookingDate].push(b);
             }
         });
         return map;
-    }, [bookingRowData, twoYearsAgo]);
+    }, [allBookings, twoYearsAgo]);
 
     // Automatically select the first booking in the list when list updates, if none selected
     const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
@@ -149,20 +156,14 @@ export const BookingCalendarModal = ({
 
     // Get ALL bookings for the active selection (same VIN)
     const activeCustomerBookings = useMemo(() => {
-        const selectedRep = bookingRowData.find(b => b.id === selectedBookingId);
+        const selectedRep = allBookings.find(b => b.id === selectedBookingId);
         if (!selectedRep || !selectedRep.vin) return [];
 
-        // Find all bookings with same VIN on the SAME day if not searching, or just same VIN if searching (context dependent, but requirements say "this customer and this date")
-        // Requirement 2: "all parts belonging to this customer and this date"
-
-        // If we are in search mode, we might want to show that specific date's details. 
-        // But the representative 'selectedRep' has a specific date. Let's filter by VIN and that representative's Date.
-
-        return bookingRowData.filter(b =>
+        return allBookings.filter(b =>
             b.vin === selectedRep.vin &&
             b.bookingDate === selectedRep.bookingDate
         );
-    }, [bookingRowData, selectedBookingId]);
+    }, [allBookings, selectedBookingId]);
 
     const activeBookingRep = activeCustomerBookings[0];
 
@@ -178,13 +179,13 @@ export const BookingCalendarModal = ({
     const activeCustomerHistoryDates = useMemo(() => {
         if (!activeBookingRep?.vin) return [];
         const uniqueDates = new Set(
-            bookingRowData
+            allBookings
                 .filter(b => b.vin === activeBookingRep.vin && b.bookingDate)
                 .map(b => b.bookingDate as string)
         );
         return Array.from(uniqueDates)
             .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // Newest first
-    }, [bookingRowData, activeBookingRep]);
+    }, [allBookings, activeBookingRep]);
 
     // Set of dates for the active customer (for highlighting on calendar)
     const activeCustomerDateSet = useMemo(() => {
@@ -264,6 +265,10 @@ export const BookingCalendarModal = ({
                     const isFaded = searchQuery && !isSearchMatch;
                     const isActiveCustomerDate = activeCustomerDateSet.has(dateKey);
 
+                    // Group bookings by VIN for this day to count unique customers
+                    const dayBookings = bookingsByDateMap[dateKey] || [];
+                    const customerGroups = Array.from(new Set(dayBookings.map(b => b.vin))).slice(0, 3);
+
                     return (
                         <button
                             key={day.toString()}
@@ -279,18 +284,40 @@ export const BookingCalendarModal = ({
                                     : "hover:bg-white/5",
                                 isSearchMatch && !isSelected && "text-emerald-500 font-bold",
                                 isFaded && !isSelected && "opacity-20 pointer-events-none",
-                                // Highlight active customer dates with subtle yellow ring
-                                isActiveCustomerDate && !isSelected && !isFaded && "ring-1 ring-renault-yellow/40 text-renault-yellow"
+                                // Highlight active customer dates with subtle ring
+                                isActiveCustomerDate && !isSelected && !isFaded && "ring-1 ring-emerald-500/40 text-emerald-500"
                             )}
                         >
                             {format(day, "d")}
 
-                            {/* Minimalism: Small dots only */}
-                            {hasBookings && !isSelected && !isFaded && (
-                                <div className={cn(
-                                    "absolute bottom-2 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full",
-                                    isActiveCustomerDate ? "bg-renault-yellow w-1 h-1" : (isSearchMatch ? "bg-emerald-500 w-1 h-1" : (isCurrentMonth ? "bg-renault-yellow" : "bg-gray-800"))
-                                )} />
+                            {/* Multiple Customer Stacked Indicators */}
+                            {hasBookings && !isFaded && (
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center h-3 w-8">
+                                    {customerGroups.map((vin, idx) => {
+                                        const customerBooking = dayBookings.find(b => b.vin === vin);
+                                        const statusColor = customerBooking
+                                            ? (bookingStatuses.find(s => s.label === customerBooking.bookingStatus)?.color || "bg-emerald-500/80")
+                                            : "bg-emerald-500/80";
+
+                                        return (
+                                            <div
+                                                key={vin}
+                                                style={{
+                                                    zIndex: 10 - idx,
+                                                    transform: `translateX(${(idx - (customerGroups.length - 1) / 2) * 6}px)`
+                                                }}
+                                                className={cn(
+                                                    "absolute w-3 h-3 rounded-full shadow-lg transition-all duration-300 border border-black/20",
+                                                    statusColor,
+                                                    isActiveCustomerDate && vin === activeBookingRep?.vin
+                                                        ? "ring-1 ring-white/60 scale-110"
+                                                        : "",
+                                                    isSelected && "ring-1 ring-white/30"
+                                                )}
+                                            />
+                                        );
+                                    })}
+                                </div>
                             )}
                         </button>
                     );
@@ -300,8 +327,9 @@ export const BookingCalendarModal = ({
     };
 
     const handleConfirmBooking = () => {
-        onConfirm(selectedDateKey, bookingNote);
+        onConfirm(selectedDateKey, bookingNote, preBookingStatus);
         setBookingNote("");
+        setPreBookingStatus("");
     };
 
     return (
@@ -341,29 +369,17 @@ export const BookingCalendarModal = ({
                         {renderCells()}
                     </div>
 
-                    {/* Booking Action Area */}
-                    <div className="mt-12 flex items-center gap-6">
-                        <div className="flex-1 relative">
-                            <MessageSquare className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 pointer-events-none" />
-                            <Input
-                                value={bookingNote}
-                                onChange={(e) => setBookingNote(e.target.value)}
-                                placeholder={selectedRows.length === 0 ? "View Mode: History" : "Add a note for this booking..."}
-                                disabled={selectedRows.length === 0}
-                                className="w-full pl-11 bg-white/[0.03] border-white/10 rounded-full focus:ring-1 focus:ring-white/20 focus:border-white/20 h-12 text-gray-300 placeholder:text-gray-700 disabled:opacity-30 transition-all"
-                            />
-                        </div>
+                    {/* Booking Action Area: New Purple Pill Button */}
+                    <div className="mt-8 mb-6 flex justify-center w-full px-6">
                         <Button
                             onClick={handleConfirmBooking}
                             disabled={!!searchQuery || selectedRows.length === 0}
                             className={cn(
-                                "h-12 px-10 rounded-full font-bold transition-all text-xs tracking-[0.1em] uppercase border shadow-lg",
-                                (searchQuery || selectedRows.length === 0)
-                                    ? "bg-transparent border-white/5 text-gray-700 cursor-not-allowed"
-                                    : "bg-white text-black border-white hover:bg-gray-100 active:scale-95 translate-y-0 hover:-translate-y-0.5"
+                                "h-14 w-full max-w-lg rounded-[2rem] font-bold transition-all text-sm tracking-widest bg-indigo-600/90 hover:bg-indigo-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] active:scale-[0.98] disabled:opacity-20 translate-y-0 hover:-translate-y-1",
+                                (searchQuery || selectedRows.length === 0) && "bg-gray-900 border-white/5 text-gray-700 shadow-none pointer-events-none"
                             )}
                         >
-                            {selectedRows.length === 0 ? "View Mode" : (searchQuery ? "Clear Search" : "Book Date")}
+                            {selectedRows.length === 0 ? "Selection Mode Required" : (searchQuery ? "Clear Search" : `Book ${format(selectedDate, "MMM d")}`)}
                         </Button>
                     </div>
                 </div>
@@ -371,7 +387,71 @@ export const BookingCalendarModal = ({
                 {/* Right Side: Sidebar (Detail Card) */}
                 <div className="w-[400px] bg-[#0a0a0b] border-l border-white/5 flex flex-col">
 
-                    {/* Section 1: Customer List */}
+                    {/* Section 1: Pre-booking Setup (Only visible when starting a booking) */}
+                    {selectedRows.length > 0 && (
+                        <div className="p-6 border-b border-indigo-500/10 bg-indigo-500/[0.02] space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <div className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">New Booking</div>
+                                    <h3 className="text-xs font-medium text-gray-400">{selectedRows.length} Items • {selectedRows[0]?.customerName}</h3>
+                                </div>
+
+                                {/* Status Picker for new booking */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all group">
+                                            {preBookingStatus ? (
+                                                <>
+                                                    <div className={cn(
+                                                        "w-2 h-2 rounded-full",
+                                                        bookingStatuses.find(s => s.label === preBookingStatus)?.color || "bg-gray-500"
+                                                    )} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">
+                                                        {preBookingStatus}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400/70">Set Status</span>
+                                            )}
+                                            <ChevronRight className="h-3 w-3 text-indigo-500 group-hover:text-indigo-400 rotate-90" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-48 p-2 bg-[#0f0f11] border-white/10 rounded-xl shadow-2xl z-[60]">
+                                        <div className="space-y-1">
+                                            {bookingStatuses.map((status) => (
+                                                <button
+                                                    key={status.id}
+                                                    onClick={() => setPreBookingStatus(status.label)}
+                                                    className={cn(
+                                                        "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                                                        preBookingStatus === status.label
+                                                            ? "bg-white/10 text-white"
+                                                            : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                                                    )}
+                                                >
+                                                    <div className={cn("w-2 h-2 rounded-full shadow-lg", status.color)} />
+                                                    <span className="text-xs font-semibold">{status.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Compact Note Input */}
+                            <div className="relative">
+                                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none" />
+                                <Input
+                                    value={bookingNote}
+                                    onChange={(e) => setBookingNote(e.target.value)}
+                                    placeholder="Add initial note..."
+                                    className="w-full pl-10 pr-3 h-9 bg-white/[0.02] border-indigo-500/20 rounded-lg focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/30 text-sm text-gray-300 placeholder:text-gray-600 transition-all"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Section 2: Customer List */}
                     <div className="h-1/3 border-b border-white/5 p-6 overflow-y-auto custom-scrollbar">
                         <h4 className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-4 sticky top-0 bg-[#0a0a0b] py-2 z-10">
                             {searchQuery ? "Search Results" : "Customers"}
@@ -455,7 +535,54 @@ export const BookingCalendarModal = ({
                                     <div className="flex items-start gap-3">
                                         <Package className="h-4 w-4 mt-0.5 text-gray-600" />
                                         <div className="space-y-3 flex-1">
-                                            <span className="block text-xs font-medium text-gray-500 uppercase">Parts List</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="block text-xs font-medium text-gray-500 uppercase">Parts List</span>
+
+                                                {/* Booking Status Dropdown */}
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+                                                            {activeBookingRep.bookingStatus ? (
+                                                                <>
+                                                                    <div className={cn(
+                                                                        "w-2 h-2 rounded-full",
+                                                                        bookingStatuses.find(s => s.label === activeBookingRep.bookingStatus)?.color || "bg-gray-500"
+                                                                    )} />
+                                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
+                                                                        {activeBookingRep.bookingStatus}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</span>
+                                                            )}
+                                                            <ChevronRight className="h-3 w-3 text-gray-600 group-hover:text-gray-400 transition-transform rotate-90" />
+                                                        </button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-48 p-2 bg-[#0f0f11] border-white/10 rounded-xl shadow-2xl z-[60]">
+                                                        <div className="space-y-1">
+                                                            {bookingStatuses.map((status) => (
+                                                                <button
+                                                                    key={status.id}
+                                                                    onClick={() => {
+                                                                        activeCustomerBookings.forEach(b => {
+                                                                            updateBookingStatus(b.id, status.label);
+                                                                        });
+                                                                    }}
+                                                                    className={cn(
+                                                                        "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                                                                        activeBookingRep.bookingStatus === status.label
+                                                                            ? "bg-white/10 text-white"
+                                                                            : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                                                                    )}
+                                                                >
+                                                                    <div className={cn("w-2 h-2 rounded-full shadow-lg", status.color)} />
+                                                                    <span className="text-xs font-semibold">{status.label}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </div>
 
                                             {activeCustomerBookings.map((booking, idx) => (
                                                 <div key={booking.id} className={cn("relative pl-4 border-l border-white/10", idx !== activeCustomerBookings.length - 1 && "pb-2")}>

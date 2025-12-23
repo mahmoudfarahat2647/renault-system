@@ -58,6 +58,7 @@ export interface PendingRow {
     actionNote?: string;
     bookingDate?: string;
     bookingNote?: string;
+    bookingStatus?: string;
     hasAttachment?: boolean;
     attachmentPath?: string;
     reminder?: {
@@ -101,6 +102,7 @@ export interface AppStateSnapshot {
     bookingRowData: PendingRow[];
     callRowData: PendingRow[];
     archiveRowData: PendingRow[];
+    bookingStatuses: PartStatusDef[];
 }
 
 export interface AppState extends AppStateSnapshot {
@@ -108,6 +110,7 @@ export interface AppState extends AppStateSnapshot {
     todos: TodoItem[];
     notes: StickyNote[];
     partStatuses: PartStatusDef[];
+    bookingStatuses: PartStatusDef[];
 
     // Dynamic Managed Lists
     models: string[];

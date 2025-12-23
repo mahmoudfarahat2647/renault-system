@@ -29,7 +29,7 @@ interface AppActions {
     // Movement Actions
     commitToMainSheet: (ids: string[]) => void;
     sendToCallList: (ids: string[]) => void;
-    sendToBooking: (ids: string[], bookingDate: string, bookingNote?: string) => void;
+    sendToBooking: (ids: string[], bookingDate: string, bookingNote?: string, bookingStatus?: string) => void;
     sendToArchive: (ids: string[], actionNote?: string) => void;
     sendToReorder: (ids: string[], actionNote: string) => void;
 
@@ -37,6 +37,11 @@ interface AppActions {
     updatePartStatus: (id: string, partStatus: string) => void;
     addPartStatusDef: (status: PartStatusDef) => void;
     removePartStatusDef: (id: string) => void;
+
+    // Booking Status
+    updateBookingStatus: (id: string, bookingStatus: string) => void;
+    addBookingStatusDef: (status: PartStatusDef) => void;
+    removeBookingStatusDef: (id: string) => void;
 
     // History
     addCommit: (actionName: string) => void;
@@ -77,6 +82,12 @@ const defaultPartStatuses: PartStatusDef[] = [
     { id: 'issue', label: 'Has Issue', color: 'bg-red-500' }
 ];
 
+const defaultBookingStatuses: PartStatusDef[] = [
+    { id: 'add', label: 'Add', color: 'bg-emerald-500' },
+    { id: 'cancel', label: 'Cancel', color: 'bg-red-500' },
+    { id: 'reschedule', label: 'Reschedule', color: 'bg-blue-500' }
+];
+
 const initialState: AppState = {
     rowData: [],
     ordersRowData: [],
@@ -86,6 +97,7 @@ const initialState: AppState = {
     todos: [],
     notes: [],
     partStatuses: defaultPartStatuses,
+    bookingStatuses: defaultBookingStatuses,
     models: ["Megane IV", "Clio V", "Kadjar", "Captur II", "Duster II", "Talisman"],
     repairSystems: ["Mechanical", "Electrical", "Body", "ضمان"],
     noteTemplates: ["Customer not available", "Wrong number", "Will call back"],
@@ -224,7 +236,7 @@ export const useAppStore = create<AppState & AppActions>()(
                 get().addCommit("Send to Call List");
             },
 
-            sendToBooking: (ids, bookingDate, bookingNote) => {
+            sendToBooking: (ids, bookingDate, bookingNote, bookingStatus) => {
                 set((state) => {
                     const rowsToMove = state.callRowData.filter((r) =>
                         ids.includes(r.id)
@@ -235,6 +247,7 @@ export const useAppStore = create<AppState & AppActions>()(
                         trackingId: `BOOK-${r.baseId}`,
                         bookingDate,
                         bookingNote,
+                        bookingStatus: bookingStatus || r.bookingStatus,
                     }));
 
                     return {
@@ -320,6 +333,35 @@ export const useAppStore = create<AppState & AppActions>()(
                 get().addCommit("Remove Part Status Definition");
             },
 
+            // Booking Status
+            updateBookingStatus: (id, bookingStatus) => {
+                const updateInArray = (arr: PendingRow[]) =>
+                    arr.map((row) => (row.id === id ? { ...row, bookingStatus } : row));
+
+                set((state) => ({
+                    rowData: updateInArray(state.rowData),
+                    ordersRowData: updateInArray(state.ordersRowData),
+                    bookingRowData: updateInArray(state.bookingRowData),
+                    callRowData: updateInArray(state.callRowData),
+                    archiveRowData: updateInArray(state.archiveRowData),
+                }));
+                get().addCommit("Update Booking Status");
+            },
+
+            addBookingStatusDef: (status) => {
+                set((state) => ({
+                    bookingStatuses: [...state.bookingStatuses, status],
+                }));
+                get().addCommit("Add Booking Status Definition");
+            },
+
+            removeBookingStatusDef: (id) => {
+                set((state) => ({
+                    bookingStatuses: state.bookingStatuses.filter((s) => s.id !== id),
+                }));
+                get().addCommit("Remove Booking Status Definition");
+            },
+
             // History
             addCommit: (actionName) => {
                 const state = get();
@@ -329,6 +371,7 @@ export const useAppStore = create<AppState & AppActions>()(
                     bookingRowData: structuredClone(state.bookingRowData),
                     callRowData: structuredClone(state.callRowData),
                     archiveRowData: structuredClone(state.archiveRowData),
+                    bookingStatuses: structuredClone(state.bookingStatuses),
                 };
 
                 const commit: CommitLog = {
@@ -378,6 +421,7 @@ export const useAppStore = create<AppState & AppActions>()(
                     bookingRowData: structuredClone(state.bookingRowData),
                     callRowData: structuredClone(state.callRowData),
                     archiveRowData: structuredClone(state.archiveRowData),
+                    bookingStatuses: structuredClone(state.bookingStatuses),
                 };
 
                 const lastCommit = state.commits[state.commits.length - 1];
@@ -407,6 +451,7 @@ export const useAppStore = create<AppState & AppActions>()(
                     bookingRowData: structuredClone(state.bookingRowData),
                     callRowData: structuredClone(state.callRowData),
                     archiveRowData: structuredClone(state.archiveRowData),
+                    bookingStatuses: structuredClone(state.bookingStatuses),
                 };
 
                 const lastRedo = state.redos[state.redos.length - 1];
@@ -554,6 +599,7 @@ export const useAppStore = create<AppState & AppActions>()(
                 todos: state.todos,
                 notes: state.notes,
                 partStatuses: state.partStatuses,
+                bookingStatuses: state.bookingStatuses,
                 models: state.models,
                 repairSystems: state.repairSystems,
                 noteTemplates: state.noteTemplates,

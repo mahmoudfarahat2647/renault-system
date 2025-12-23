@@ -1,4 +1,6 @@
 import React from "react";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 interface InfoLabelProps {
@@ -6,6 +8,7 @@ interface InfoLabelProps {
 }
 
 export const InfoLabel = ({ data }: InfoLabelProps) => {
+    const { bookingStatuses } = useAppStore();
     const {
         customerName = "-",
         vin = "-",
@@ -16,8 +19,14 @@ export const InfoLabel = ({ data }: InfoLabelProps) => {
         description = "-",
         repairSystem = "-",
         remainTime = "-",
-        status = "-"
+        status = "-",
+        bookingStatus
     } = data || {};
+
+    const statusDef = bookingStatus ? bookingStatuses.find(s => s.label === bookingStatus) : null;
+    const statsColor = statusDef?.color || "bg-renault-yellow";
+    const bgOpacity = statsColor.includes("/") ? "" : "/10";
+    const borderOpacity = statsColor.includes("/") ? "" : "/20";
 
     return (
         <div className="w-full relative group">
@@ -81,8 +90,14 @@ export const InfoLabel = ({ data }: InfoLabelProps) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">stats :</span>
-                            <span className="bg-renault-yellow/10 text-renault-yellow px-2 py-0.5 rounded border border-renault-yellow/20 shadow-[0_0_10px_rgba(255,204,0,0.1)] text-[10px] font-black uppercase tracking-widest">
-                                {status}
+                            <span className={cn(
+                                "px-2 py-0.5 rounded border text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                statsColor.replace('bg-', 'border-').split(' ')[0] + "/20",
+                                statsColor.replace('bg-', 'text-').split(' ')[0],
+                                statsColor.includes('/') ? statsColor : `${statsColor}/10`,
+                                "bg-opacity-10" // Force opacity for background if not already present
+                            )}>
+                                {bookingStatus || status}
                             </span>
                         </div>
                     </div>
