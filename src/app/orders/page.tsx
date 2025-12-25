@@ -18,6 +18,7 @@ import { generateId, getCalculatorValues } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
+import { exportToLogisticsCSV } from "@/lib/exportUtils";
 
 export default function OrdersPage() {
 	const {
@@ -186,6 +187,11 @@ export default function OrdersPage() {
 		printReservationLabels(selectedRows);
 	};
 
+	const handleShareToLogistics = () => {
+		if (selectedRows.length === 0) return;
+		exportToLogisticsCSV(selectedRows);
+	};
+
 	return (
 		<TooltipProvider>
 			<div className="space-y-6 h-full flex flex-col">
@@ -202,6 +208,7 @@ export default function OrdersPage() {
 							onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
 							onPrint={handlePrint}
 							onReserve={handleReserve}
+							onShareToLogistics={handleShareToLogistics}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
