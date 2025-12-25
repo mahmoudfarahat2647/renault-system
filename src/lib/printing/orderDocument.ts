@@ -1,21 +1,57 @@
-
-import { PendingRow } from './types';
+import type { PendingRow } from "@/types";
 
 /**
- * PRINT ORDER SYSTEM - TECHNICAL DOCUMENTATION
- * This function handles the generation of a professional A4 spare parts request form.
- * Layout: RTL (Arabic)
- * Pagination: Grouped by VIN
- * Capacity: 18 items per page (3 columns x 6 rows)
+ * @module OrderDocumentPrinter
+ * @description Professional spare parts order document generator for Egyptian International Motors (EiM)
+ * 
+ * ## Purpose
+ * Generates official A4 order request forms (نموذج طلب قطع غيار غير متوفرة) for unavailable spare parts.
+ * These documents are used for formal procurement and workshop approval processes.
+ * 
+ * ## Features
+ * - **VIN Grouping**: Automatically groups orders by vehicle (VIN) for organized processing
+ * - **3-Column Grid**: Displays up to 18 parts per page (6 parts × 3 columns)
+ * - **RTL Layout**: Arabic-first design with proper right-to-left text flow
+ * - **Dual Typography**: Cairo font for Arabic, Inter for technical data (VIN, Part Numbers)
+ * - **Signature Sections**: Dedicated approval areas for workshop manager and parts supervisor
+ * 
+ * ## Document Structure
+ * - Header: EiM branding + current date
+ * - Title: "نموذج طلب قطع غيار غير متوفرة"
+ * - Customer/Vehicle Information Section
+ * - Parts Grid (3 columns)
+ * - Footer: Notes, approval stamps, and signatures
+ * 
+ * @author Renault System Development Team
+ * @since 2025-12-25
  */
-export const printOrders = (selected: PendingRow[]) => {
+
+/**
+ * Prints spare parts order documents grouped by VIN
+ * 
+ * @param {PendingRow[]} selected - Array of selected pending rows to print
+ * @returns {void}
+ * 
+ * @remarks
+ * - Each unique VIN generates a separate page
+ * - Maximum 18 parts per page (dictated by 3-column × 6-row grid)
+ * - Documents open in new window for isolated printing
+ * 
+ * @example
+ * ```typescript
+ * // Print orders for selected rows
+ * const selectedOrders = [...];
+ * printOrderDocument(selectedOrders);
+ * ```
+ */
+export const printOrderDocument = (selected: PendingRow[]): void => {
+    // Validation: Ensure orders are selected
     if (selected.length === 0) {
         alert("Please select orders to print.");
         return;
     }
 
-    // 1. DATA GROUPING LOGIC
-    // Group multiple part requests by their VIN to generate separate pages
+    // Group orders by VIN to generate one page per vehicle
     const grouped: Record<string, PendingRow[]> = {};
     selected.forEach(row => {
         const key = row.vin || 'Unknown';
@@ -23,18 +59,20 @@ export const printOrders = (selected: PendingRow[]) => {
         grouped[key].push(row);
     });
 
-    // 2. WINDOW INITIALIZATION
+    // Open new window for print-isolated context
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    // 3. CSS & HTML TEMPLATE
+    // Build complete HTML document
     let htmlContent = `
         <html>
         <head>
             <title>Print Orders - Pending.Sys</title>
             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
             <style>
+                /* Print Configuration */
                 @page { margin: 0; size: A4; }
+                
                 body { 
                     font-family: 'Cairo', sans-serif; 
                     direction: rtl; 
@@ -43,6 +81,8 @@ export const printOrders = (selected: PendingRow[]) => {
                     color: #000; 
                     -webkit-print-color-adjust: exact; 
                 }
+                
+                /* Page Container: Exact A4 dimensions */
                 .page { 
                     padding: 30px 40px; 
                     box-sizing: border-box; 
@@ -60,10 +100,30 @@ export const printOrders = (selected: PendingRow[]) => {
                     align-items: flex-start; 
                     margin-bottom: 10px; 
                 }
-                .logo-text { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 32px; line-height: 0.8; letter-spacing: -1px; }
-                .logo-sub { font-family: 'Inter', sans-serif; font-size: 7px; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-                .date { font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 600; }
+                
+                .logo-text { 
+                    font-family: 'Inter', sans-serif; 
+                    font-weight: 900; 
+                    font-size: 32px; 
+                    line-height: 0.8; 
+                    letter-spacing: -1px; 
+                }
+                
+                .logo-sub { 
+                    font-family: 'Inter', sans-serif; 
+                    font-size: 7px; 
+                    letter-spacing: 1px; 
+                    text-transform: uppercase; 
+                    margin-top: 2px; 
+                }
+                
+                .date { 
+                    font-size: 10px; 
+                    font-family: 'Inter', sans-serif; 
+                    font-weight: 600; 
+                }
 
+                /* Document Title */
                 .main-title { 
                     text-align: center; 
                     font-weight: 900; 
@@ -73,29 +133,33 @@ export const printOrders = (selected: PendingRow[]) => {
                     text-underline-offset: 6px;
                 }
 
-                /* Identity Section */
+                /* Customer Information Section */
                 .customer-section {
                     margin-bottom: 20px;
                     display: flex;
                     flex-direction: column;
                 }
+                
                 .info-row {
                     display: flex;
                     align-items: baseline;
                     padding: 3px 0;
                 }
+                
                 .label { 
                     font-size: 11px; 
                     color: #333; 
                     width: 110px;
                     font-weight: 800;
                 }
+                
                 .value { 
                     font-size: 12px; 
                     font-weight: 700; 
                     color: #000;
                     flex: 1;
                 }
+                
                 .vin-value {
                     font-family: 'Inter', monospace;
                     font-size: 15px;
@@ -105,6 +169,7 @@ export const printOrders = (selected: PendingRow[]) => {
                     text-align: right;
                 }
 
+                /* Section Headers */
                 .section-header {
                     font-size: 12px;
                     font-weight: 900;
@@ -115,7 +180,7 @@ export const printOrders = (selected: PendingRow[]) => {
                     border-radius: 4px;
                 }
 
-                /* Parts Grid Logic */
+                /* Parts Grid: 3 columns × 6 rows */
                 .parts-container { 
                     display: grid; 
                     grid-template-columns: repeat(3, 1fr);
@@ -123,7 +188,12 @@ export const printOrders = (selected: PendingRow[]) => {
                     margin-top: 10px; 
                     width: 100%;
                 }
-                .parts-col { display: flex; flex-direction: column; }
+                
+                .parts-col { 
+                    display: flex; 
+                    flex-direction: column; 
+                }
+                
                 .part-item { 
                     display: flex; 
                     justify-content: space-between; 
@@ -131,12 +201,14 @@ export const printOrders = (selected: PendingRow[]) => {
                     padding: 4px 0;
                     min-height: 22px;
                 }
+                
                 .part-desc { 
                     font-size: 12px;
                     font-weight: 800; 
                     flex: 1;
                     padding-left: 8px;
                 }
+                
                 .part-num { 
                     font-family: 'Inter', monospace; 
                     font-weight: 800; 
@@ -144,24 +216,27 @@ export const printOrders = (selected: PendingRow[]) => {
                     direction: ltr;
                 }
 
-                /* Signature Footer */
+                /* Footer Section: Signatures and Approvals */
                 .footer { 
                     position: absolute;
                     bottom: 40mm;
                     left: 40px;
                     right: 40px;
                 }
+                
                 .engineer-name {
                     font-weight: 900;
                     font-size: 13px;
                     margin-bottom: 20px;
                     text-align: left;
                 }
+                
                 .note-line {
                     margin-bottom: 15px;
                     font-size: 11px;
                     font-weight: 700;
                 }
+                
                 .signatures {
                     display: flex;
                     justify-content: space-between;
@@ -174,18 +249,19 @@ export const printOrders = (selected: PendingRow[]) => {
         <body>
     `;
 
-    // 4. GENERATE PAGE CONTENT
+    // Generate page content for each VIN
     Object.keys(grouped).forEach(vin => {
         const rows = grouped[vin];
         const info = rows[0];
-        
-        // Distribution Logic: 6 items per column
+
+        // Distribute parts across 3 columns (6 items per column)
         const rowsPerCol = 6;
         const col1 = rows.slice(0, rowsPerCol);
         const col2 = rows.slice(rowsPerCol, rowsPerCol * 2);
         const col3 = rows.slice(rowsPerCol * 2, rowsPerCol * 3);
 
-        const renderPart = (p: any) => `
+        // Helper function to render a single part item
+        const renderPart = (p: PendingRow) => `
             <div class="part-item">
                 <span class="part-desc">${p.description || '-'}</span>
                 <span class="part-num">${p.partNumber || '-'}</span>
@@ -237,81 +313,15 @@ export const printOrders = (selected: PendingRow[]) => {
     });
 
     htmlContent += `</body></html>`;
-    
+
+    // Inject HTML and trigger print
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    
-    // 5. PRINT TRIGGER
+
+    // Auto-trigger print dialog after font loading
     setTimeout(() => {
         printWindow.focus();
         printWindow.print();
         printWindow.close();
     }, 1000);
-};
-
-/**
- * RESERVATION LABEL SYSTEM
- * Generates sticky-size labels for physical parts reservation.
- */
-export const printReservationLabels = (selected: PendingRow[]) => {
-    if (selected.length === 0) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const labelsHtml = selected.map(row => {
-        const today = new Date().toLocaleDateString('en-GB'); 
-        return `
-            <div class="label-box">
-                <div class="header">
-                    <div class="header-left">
-                        <span class="brand">RENAULT</span>
-                    </div>
-                    <div class="header-right">قطعة غيار محجوزة</div>
-                </div>
-                <div class="row name-row">
-                    <div class="field-label">اسم العميل</div>
-                    <div class="field-value">${row.customerName || '-'}</div>
-                </div>
-                <div class="row split-row">
-                    <div class="cell main-cell"><div class="field-label">اسم القطعه</div><div class="field-value">${row.description || '-'}</div></div>
-                    <div class="cell side-cell"><div class="field-label">التاريخ</div><div class="field-value">${today}</div></div>
-                </div>
-                <div class="row last split-row">
-                    <div class="cell main-cell"><div class="field-label">رقم الشاسيه</div><div class="field-value vin-text">${row.vin || '-'}</div></div>
-                    <div class="cell side-cell"><div class="field-label">رقم القطعه</div><div class="field-value mono">${row.partNumber || '-'}</div></div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Labels</title>
-            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-            <style>
-                @page { size: A4; margin: 1cm; }
-                body { font-family: 'Cairo', sans-serif; direction: rtl; }
-                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-                .label-box { border: 3px solid #000; background: #fff; page-break-inside: avoid; margin-bottom: 10px; display: flex; flex-direction: column; }
-                .header { display: flex; border-bottom: 3px solid #000; height: 50px; }
-                .header-left { width: 40%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; }
-                .header-right { width: 60%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
-                .row { border-bottom: 2px solid #000; padding: 5px 10px; }
-                .split-row { display: flex; padding: 0; }
-                .cell { flex: 1; padding: 5px 10px; text-align: center; border-left: 2px solid #000; }
-                .cell:last-child { border-left: none; }
-                .side-cell { width: 100px; flex-shrink: 0; }
-                .field-label { font-size: 10px; font-weight: 700; color: #555; }
-                .field-value { font-size: 15px; font-weight: 900; }
-                .vin-text { font-family: monospace; font-size: 20px; direction: ltr; }
-                .mono { font-family: monospace; font-size: 14px; direction: ltr; }
-            </style>
-        </head>
-        <body><div class="grid">${labelsHtml}</div></body>
-        </html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 1000);
 };

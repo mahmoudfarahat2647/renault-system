@@ -17,8 +17,7 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { generateId, getCalculatorValues } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
-import { printOrders } from "@/lib/printUtils";
-import { printReservationLabels } from "../../../printUtils";
+import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 
 export default function OrdersPage() {
 	const {
@@ -179,7 +178,7 @@ export default function OrdersPage() {
 
 	const handlePrint = () => {
 		if (selectedRows.length === 0) return;
-		printOrders(selectedRows);
+		printOrderDocument(selectedRows);
 	};
 
 	const handleReserve = () => {

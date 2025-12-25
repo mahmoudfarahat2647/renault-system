@@ -1,20 +1,56 @@
-
-import { PendingRow } from './types';
+import type { PendingRow } from "@/types";
 
 /**
- * Prints professional A4 part reservation labels.
- * Layout: 2 labels per row (Grid), designed for physical part tagging.
- * Features: Renault branding, high-contrast black borders, RTL support.
+ * @module ReservationLabelPrinter
+ * @description Professional reservation label generator for physical part tagging in automotive workshops
+ * 
+ * ## Purpose
+ * Generates high-quality A4 printable labels (2 per row) for reserved spare parts.
+ * Labels are designed to be affixed to physical inventory items in the warehouse.
+ * 
+ * ## Features
+ * - **Renault Branding**: Official SVG logo with brand consistency
+ * - **RTL Layout**: Right-to-left text flow for Arabic language
+ * - **High Contrast**: 4px black borders for warehouse visibility
+ * - **Grid System**: 2-column layout optimized for A4 printing
+ * - **Date Stamping**: Automatic reservation date in DD/MM/YYYY format
+ * 
+ * ## Label Layout
+ * Each label contains:
+ * - Header: Renault logo + "Reserved Part" status
+ * - Customer name (large, emphasized)
+ * - Part description and reservation date
+ * - VIN (monospace for clarity) and part number
+ * 
+ * @author Renault System Development Team
+ * @since 2025-12-25
  */
-export const printReservationLabels = (selected: PendingRow[]) => {
+
+/**
+ * Prints reservation labels for selected parts
+ * 
+ * @param {PendingRow[]} selected - Array of selected pending rows to print labels for
+ * @returns {void}
+ * 
+ * @example
+ * ```typescript
+ * // Print labels for selected orders
+ * const selectedOrders = [...];
+ * printReservationLabels(selectedOrders);
+ * ```
+ */
+export const printReservationLabels = (selected: PendingRow[]): void => {
+    // Validation: Ensure at least one order is selected
     if (selected.length === 0) {
         alert("Please select items to print reservation labels.");
         return;
     }
 
+    // Open new window for print-isolated context (prevents CSS bleeding)
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    // Generate HTML for each label
     const labelsHtml = selected.map(row => {
         const today = new Date().toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
         return `
@@ -65,6 +101,7 @@ export const printReservationLabels = (selected: PendingRow[]) => {
         `;
     }).join('');
 
+    // Complete HTML document with embedded styles
     const htmlContent = `
         <!DOCTYPE html>
         <html dir="rtl">
@@ -73,7 +110,9 @@ export const printReservationLabels = (selected: PendingRow[]) => {
             <title>Reservation Labels</title>
             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
             <style>
+                /* Print Configuration */
                 @page { margin: 1cm; size: A4; }
+                
                 body { 
                     font-family: 'Cairo', sans-serif; 
                     margin: 0; 
@@ -81,11 +120,15 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     background: white;
                     -webkit-print-color-adjust: exact;
                 }
+                
+                /* Grid Layout: 2 labels per row */
                 .grid-container {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 20px;
                 }
+                
+                /* Label Container */
                 .label-box {
                     border: 4px solid black;
                     background: #fdfbf7;
@@ -95,12 +138,15 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     flex-direction: column;
                     overflow: hidden;
                 }
+                
+                /* Header Section */
                 .header {
                     display: flex;
                     border-bottom: 4px solid black;
                     height: 70px;
                     flex-shrink: 0;
                 }
+                
                 .header-left {
                     width: 45%;
                     display: flex;
@@ -109,17 +155,20 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     background: white;
                     gap: 8px;
                 }
+                
                 .logo {
                     height: 40px;
                     width: auto;
                     fill: black;
                 }
+                
                 .brand {
                     font-family: sans-serif;
                     font-weight: 900;
                     font-size: 18px;
                     letter-spacing: 1px;
                 }
+                
                 .header-right {
                     width: 55%;
                     background: black;
@@ -130,13 +179,18 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     font-size: 24px;
                     font-weight: 900;
                 }
+                
+                /* Content Rows */
                 .row {
                     border-bottom: 2px solid black;
                     padding: 10px;
                 }
+                
                 .row.last { border-bottom: none; flex: 1; }
                 .name-row { text-align: center; background: rgba(0,0,0,0.02); }
                 .split-row { display: flex; padding: 0; align-items: stretch; }
+                
+                /* Cell Structure */
                 .cell {
                     padding: 10px;
                     text-align: center;
@@ -144,12 +198,12 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     flex-direction: column;
                     justify-content: center;
                 }
+                
                 .main-cell { flex: 1; }
                 .side-cell { width: 130px; flex-shrink: 0; }
-                
-                /* Border between cells */
                 .cell:first-child { border-left: 2px solid black; }
                 
+                /* Typography */
                 .field-label {
                     font-size: 11px;
                     font-weight: 700;
@@ -157,13 +211,16 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     margin-bottom: 5px;
                     text-transform: uppercase;
                 }
+                
                 .field-value {
                     font-size: 18px;
                     font-weight: 900;
                     line-height: 1.1;
                     color: black;
                 }
+                
                 .large-text { font-size: 22px; }
+                
                 .vin-text {
                     font-family: 'Courier New', monospace;
                     font-weight: 900;
@@ -171,6 +228,7 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                     direction: ltr;
                     letter-spacing: 1px;
                 }
+                
                 .mono-text {
                     font-family: 'Courier New', monospace;
                     font-weight: 900;
@@ -184,6 +242,7 @@ export const printReservationLabels = (selected: PendingRow[]) => {
                 ${labelsHtml}
             </div>
             <script>
+                // Auto-trigger print dialog after fonts load
                 window.onload = () => {
                     setTimeout(() => {
                         window.print();
@@ -194,115 +253,8 @@ export const printReservationLabels = (selected: PendingRow[]) => {
         </body>
         </html>
     `;
-    
+
+    // Inject HTML and trigger print
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-};
-
-/**
- * Prints the official Spare Parts Order Form.
- * Optimized for A4, single page per VIN.
- * Replication Note: This is the exact layout of the formal order page.
- */
-export const printOrders = (selected: PendingRow[]) => {
-    if (selected.length === 0) {
-        alert("Please select orders to print.");
-        return;
-    }
-
-    const grouped: Record<string, PendingRow[]> = {};
-    selected.forEach(row => {
-        const key = row.vin || 'Unknown';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(row);
-    });
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    let htmlContent = `
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>Spare Parts Request</title>
-            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-            <style>
-                @page { margin: 0; size: A4; }
-                body { font-family: 'Cairo', sans-serif; direction: rtl; margin: 0; padding: 0; color: #000; -webkit-print-color-adjust: exact; }
-                .page { padding: 40px; box-sizing: border-box; height: 100vh; position: relative; background: #fff; page-break-after: always; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 3px solid black; padding-bottom: 15px; }
-                .logo-text { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 44px; line-height: 1; letter-spacing: -2px; }
-                .logo-sub { font-family: 'Inter', sans-serif; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
-                .main-title { text-align: center; font-weight: 900; font-size: 24px; margin: 30px 0; border-bottom: 2px solid #000; display: inline-block; width: 100%; padding-bottom: 10px; }
-                .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
-                .info-item { display: flex; border-bottom: 1px solid #ddd; padding: 10px 0; }
-                .label { font-size: 13px; font-weight: 800; width: 140px; color: #333; }
-                .value { font-size: 15px; font-weight: 900; flex: 1; color: black; }
-                .vin-val { font-family: 'Inter', monospace; direction: ltr; text-align: right; letter-spacing: 1px; font-size: 18px; }
-                .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                .table th { background: #000; color: #fff; padding: 12px; font-size: 14px; text-align: right; }
-                .table td { border: 1px solid #000; padding: 12px; font-size: 15px; font-weight: 900; }
-                .table tr:nth-child(even) { background: #f9f9f9; }
-                .footer { position: absolute; bottom: 80px; left: 40px; right: 40px; }
-                .sig-box { display: flex; justify-content: space-between; margin-top: 80px; font-weight: 900; font-size: 14px; }
-                .sig-item { border-top: 1px solid #000; width: 200px; text-align: center; padding-top: 10px; }
-            </style>
-        </head>
-        <body>
-    `;
-
-    Object.keys(grouped).forEach(vin => {
-        const rows = grouped[vin];
-        const info = rows[0];
-        
-        htmlContent += `
-            <div class="page">
-                <div class="header">
-                    <div><div class="logo-text">EiM</div><div class="logo-sub">EGYPTIAN INTERNATIONAL MOTORS</div></div>
-                    <div style="text-align: left;"><div style="font-size: 14px; font-weight: 900;">RENAULT EGYPT</div><div style="font-size: 12px; font-weight: 700;">${new Date().toLocaleDateString('en-GB')}</div></div>
-                </div>
-                <div class="main-title">نموذج طلب توريد قطع غيار مستعجل (V.O.R)</div>
-                <div class="info-section">
-                    <div class="info-item"><span class="label">اسم العميل :</span><span class="value">${info.customerName}</span></div>
-                    <div class="info-item"><span class="label">رقم الشاسيه :</span><span class="value vin-val">${info.vin}</span></div>
-                    <div class="info-item"><span class="label">موديل السيارة :</span><span class="value">${info.model}</span></div>
-                    <div class="info-item"><span class="label">رقم أمر الشغل :</span><span class="value" style="direction: ltr; text-align: right;">${info.baseId}</span></div>
-                    <div class="info-item"><span class="label">نظام الإصلاح :</span><span class="value">${info.repairSystem}</span></div>
-                    <div class="info-item"><span class="label">التاريخ :</span><span class="value">${info.rDate}</span></div>
-                </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px; text-align: center;">م</th>
-                            <th style="width: 200px;">رقم القطعة (Part Number)</th>
-                            <th>الوصف (Description)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows.map((r, i) => `
-                            <tr>
-                                <td style="text-align: center;">${i + 1}</td>
-                                <td style="font-family: 'Inter', monospace; font-size: 16px;">${r.partNumber}</td>
-                                <td>${r.description}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <div class="footer">
-                    <div style="font-weight: 900; margin-bottom: 25px; border-bottom: 1px dashed #999; padding-bottom: 10px;">ملاحظات : ...........................................................................................................................................</div>
-                    <div class="sig-box">
-                        <div class="sig-item">توقيع مدير الورشة</div>
-                        <div class="sig-item">توقيع مهندس الاستقبال</div>
-                        <div class="sig-item">توقيع مسؤول المخزن</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-
-    htmlContent += `</body></html>`;
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 1000);
 };
