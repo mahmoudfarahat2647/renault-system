@@ -25,6 +25,7 @@ import type { PendingRow } from "@/types";
 export default function CallListPage() {
 	const { callRowData, sendToBooking, deleteOrders, updateOrder } =
 		useAppStore();
+	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -110,7 +111,7 @@ export default function CallListPage() {
 						<Button variant="outline" size="sm">
 							Reorder
 						</Button>
-						<Button variant="outline" size="sm">
+						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
 							<Download className="h-4 w-4 mr-1" /> Extract
 						</Button>
 						<Button variant="outline" size="sm">
@@ -145,6 +146,7 @@ export default function CallListPage() {
 						rowData={callRowData}
 						columnDefs={columns}
 						onSelectionChanged={setSelectedRows}
+						onGridReady={(api) => setGridApi(api)}
 					/>
 				</CardContent>
 			</Card>

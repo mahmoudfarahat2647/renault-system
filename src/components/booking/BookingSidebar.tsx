@@ -7,7 +7,10 @@ import {
 	History as HistoryIcon,
 	MessageSquare,
 	Package,
+	X,
+	Calendar,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
 	Popover,
@@ -34,6 +37,9 @@ interface BookingSidebarProps {
 	setBookingNote: (note: string) => void;
 	activeCustomerHistoryDates: string[];
 	onHistoryDateClick: (date: Date) => void;
+	onConfirm: (date: string, note: string, status?: string) => void;
+	onOpenChange: (open: boolean) => void;
+	selectedDate: Date;
 }
 
 export const BookingSidebar = ({
@@ -53,9 +59,21 @@ export const BookingSidebar = ({
 	setBookingNote,
 	activeCustomerHistoryDates,
 	onHistoryDateClick,
+	onConfirm,
+	onOpenChange,
+	selectedDate,
 }: BookingSidebarProps) => {
+	const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
+
 	return (
-		<div className="w-[400px] bg-[#0a0a0b] border-l border-white/5 flex flex-col">
+		<div className="w-[400px] bg-[#0a0a0b] border-l border-white/5 flex flex-col relative">
+			<button
+				type="button"
+				onClick={() => onOpenChange(false)}
+				className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+			>
+				<X className="h-4 w-4" />
+			</button>
 			{selectedRows.length > 0 && (
 				<div className="p-6 border-b border-indigo-500/10 bg-indigo-500/[0.02] space-y-4">
 					<div className="flex items-center justify-between">
@@ -355,6 +373,34 @@ export const BookingSidebar = ({
 						</span>
 					)}
 				</div>
+			</div>
+
+			<div className="p-6 bg-[#0a0a0b] border-t border-white/5">
+				<Button
+					onClick={() => {
+						onConfirm(selectedDateKey, bookingNote, preBookingStatus);
+						setBookingNote("");
+						setPreBookingStatus("");
+					}}
+					disabled={!!searchQuery || selectedRows.length === 0}
+					className={cn(
+						"h-12 w-full rounded-xl font-bold transition-all text-xs tracking-widest uppercase",
+						selectedRows.length === 0 || searchQuery
+							? "bg-gray-900 border-white/5 text-gray-700 shadow-none pointer-events-none"
+							: "bg-renault-yellow hover:bg-renault-yellow/90 text-black shadow-[0_0_20px_rgba(255,206,0,0.2)]",
+					)}
+				>
+					{selectedRows.length === 0 ? (
+						"Select Items First"
+					) : searchQuery ? (
+						"Clear Search to Book"
+					) : (
+						<span className="flex items-center gap-2">
+							<Calendar className="h-4 w-4" />
+							Confirm {format(selectedDate, "MMM d")}
+						</span>
+					)}
+				</Button>
 			</div>
 		</div>
 	);

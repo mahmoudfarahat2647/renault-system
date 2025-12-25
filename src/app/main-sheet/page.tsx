@@ -36,6 +36,7 @@ export default function MainSheetPage() {
 		sendToBooking,
 	} = useAppStore();
 
+	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isLocked, setIsLocked] = useState(true);
 	const [showUnlockDialog, setShowUnlockDialog] = useState(false);
@@ -182,6 +183,7 @@ export default function MainSheetPage() {
 								toast.success("Sent to Call List");
 							}}
 							onDelete={() => setShowDeleteConfirm(true)}
+							onExtract={() => gridApi?.exportDataAsCsv()}
 						/>
 					</CardContent>
 				</Card>
@@ -201,6 +203,7 @@ export default function MainSheetPage() {
 								}
 							}}
 							readOnly={isLocked}
+							onGridReady={(api) => setGridApi(api)}
 						/>
 					</CardContent>
 				</Card>

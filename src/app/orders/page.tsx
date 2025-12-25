@@ -31,6 +31,7 @@ export default function OrdersPage() {
 		sendToBooking,
 	} = useAppStore();
 
+	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -209,6 +210,7 @@ export default function OrdersPage() {
 							onPrint={handlePrint}
 							onReserve={handleReserve}
 							onShareToLogistics={handleShareToLogistics}
+							onExtract={() => gridApi?.exportDataAsCsv()}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
@@ -216,6 +218,7 @@ export default function OrdersPage() {
 								rowData={ordersRowData}
 								columnDefs={columns}
 								onSelectionChanged={handleSelectionChanged}
+								onGridReady={(api) => setGridApi(api)}
 							/>
 						</div>
 					</CardContent>

@@ -16,6 +16,7 @@ import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
 	const { archiveRowData, deleteOrders, updateOrder } = useAppStore();
+	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -82,7 +83,7 @@ export default function ArchivePage() {
 						>
 							<RotateCcw className="h-4 w-4 mr-1" /> Reorder
 						</Button>
-						<Button variant="outline" size="sm">
+						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
 							<Download className="h-4 w-4 mr-1" /> Extract
 						</Button>
 						<Button variant="outline" size="sm">
@@ -98,6 +99,7 @@ export default function ArchivePage() {
 						rowData={archiveRowData}
 						columnDefs={columns}
 						onSelectionChanged={setSelectedRows}
+						onGridReady={(api) => setGridApi(api)}
 					/>
 				</CardContent>
 			</Card>

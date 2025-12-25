@@ -29,6 +29,7 @@ interface MainSheetToolbarProps {
 	onBooking: () => void;
 	onSendToCallList: () => void;
 	onDelete: () => void;
+	onExtract: () => void;
 }
 
 export const MainSheetToolbar = ({
@@ -40,6 +41,7 @@ export const MainSheetToolbar = ({
 	onBooking,
 	onSendToCallList,
 	onDelete,
+	onExtract,
 }: MainSheetToolbarProps) => {
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
@@ -142,6 +144,7 @@ export const MainSheetToolbar = ({
 							variant="ghost"
 							size="icon"
 							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							onClick={onExtract}
 						>
 							<Download className="h-4 w-4" />
 						</Button>

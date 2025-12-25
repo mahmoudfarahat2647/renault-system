@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, Redo2, RefreshCw, Save, Search, Undo2, X, MapPin, Hash, TableProperties } from "lucide-react";
+import { Bell, Redo2, RefreshCw, Save, Search, Undo2, X, MapPin, Hash, TableProperties, Download } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
+import { exportWorkbookCSV } from "@/lib/exportUtils";
 
 export const Header = React.memo(function Header() {
 	const _pathname = usePathname();
@@ -182,6 +183,23 @@ export const Header = React.memo(function Header() {
 						<RefreshCw className="h-5 w-5" />
 					</button>
 
+					<button
+						onClick={() => {
+							const { ordersRowData, rowData, bookingRowData, callRowData, archiveRowData } = useAppStore.getState();
+							exportWorkbookCSV({
+								orders: ordersRowData,
+								mainSheet: rowData,
+								booking: bookingRowData,
+								callList: callRowData,
+								archive: archiveRowData
+							});
+						}}
+						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
+						title="Extract All (Workbook)"
+					>
+						<Download className="h-5 w-5" />
+					</button>
+
 					<div className="relative">
 						<button
 							onClick={() => setShowNotifications(!showNotifications)}
@@ -314,6 +332,6 @@ export const Header = React.memo(function Header() {
 				</div>
 
 			</div>
-		</header>
+		</header >
 	);
 });

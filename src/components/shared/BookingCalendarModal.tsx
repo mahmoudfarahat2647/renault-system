@@ -182,10 +182,6 @@ export const BookingCalendarModal = ({
 				<DialogHeader className="sr-only">
 					<DialogTitle>Booking Schedule</DialogTitle>
 				</DialogHeader>
-				<DialogClose className="absolute right-6 top-6 z-50 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200">
-					<X className="h-5 w-5" />
-					<span className="sr-only">Close</span>
-				</DialogClose>
 
 				<div className="flex-1 p-10 flex flex-col bg-[#050505]">
 					<div className="flex items-center justify-between mb-12">
@@ -213,30 +209,7 @@ export const BookingCalendarModal = ({
 						searchMatchDates={searchMatchDates}
 						activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
 						bookingStatuses={bookingStatuses}
-						activeBookingRep={activeBookingRep}
 					/>
-
-					<div className="mt-8 mb-6 flex justify-center w-full px-6">
-						<Button
-							onClick={() => (
-								onConfirm(selectedDateKey, bookingNote, preBookingStatus),
-								setBookingNote(""),
-								setPreBookingStatus("")
-							)}
-							disabled={!!searchQuery || selectedRows.length === 0}
-							className={cn(
-								"h-14 w-full max-w-lg rounded-[2rem] font-bold transition-all text-sm tracking-widest bg-indigo-600/90 hover:bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)]",
-								(searchQuery || selectedRows.length === 0) &&
-									"bg-gray-900 border-white/5 text-gray-700 shadow-none pointer-events-none",
-							)}
-						>
-							{selectedRows.length === 0
-								? "Selection Mode Required"
-								: searchQuery
-									? "Clear Search"
-									: `Book ${format(selectedDate, "MMM d")}`}
-						</Button>
-					</div>
 				</div>
 
 				{!bookingOnly && (
@@ -256,6 +229,9 @@ export const BookingCalendarModal = ({
 						bookingNote={bookingNote}
 						setBookingNote={setBookingNote}
 						activeCustomerHistoryDates={activeCustomerHistoryDates}
+						selectedDate={selectedDate}
+						onOpenChange={onOpenChange}
+						onConfirm={onConfirm}
 						onHistoryDateClick={(date) => {
 							setCurrentMonth(date);
 							setSelectedDate(date);
@@ -263,6 +239,6 @@ export const BookingCalendarModal = ({
 					/>
 				)}
 			</DialogContent>
-		</Dialog>
+		</Dialog >
 	);
 };
