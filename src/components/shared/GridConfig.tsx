@@ -288,11 +288,6 @@ export const getBaseColumns = (
 			cellRenderer: WarrantyRenderer,
 			width: 100,
 		},
-		{
-			headerName: "ACTION NO.",
-			field: "actionNote",
-			width: 100,
-		},
 	];
 
 export const getOrdersColumns = (

@@ -1,11 +1,13 @@
 "use client";
 
 import {
+	Archive,
 	Calendar,
 	Download,
 	Filter,
 	History as HistoryIcon,
 	Phone,
+	RotateCcw,
 	Trash2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -18,16 +20,33 @@ import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function CallListPage() {
-	const { callRowData, sendToBooking, deleteOrders, updateOrder } =
-		useAppStore();
+	const {
+		callRowData,
+		sendToBooking,
+		sendToArchive,
+		sendToReorder,
+		deleteOrders,
+		updateOrder,
+	} = useAppStore();
 	const [gridApi, setGridApi] = useState<any>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
 	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
+	const [reorderReason, setReorderReason] = useState("");
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showFilters, setShowFilters] = useState(false);
 
@@ -60,6 +79,19 @@ export default function CallListPage() {
 		sendToBooking(ids, date, note, status);
 		setSelectedRows([]);
 		toast.success(`${ids.length} row(s) sent to Booking`);
+	};
+
+	const handleConfirmReorder = () => {
+		if (!reorderReason.trim()) {
+			toast.error("Please provide a reason for reorder");
+			return;
+		}
+		const ids = selectedRows.map((r) => r.id);
+		sendToReorder(ids, reorderReason);
+		setSelectedRows([]);
+		setIsReorderModalOpen(false);
+		setReorderReason("");
+		toast.success(`${ids.length} row(s) sent back to Orders (Reorder)`);
 	};
 
 	const handleDelete = () => {
@@ -106,11 +138,22 @@ export default function CallListPage() {
 						>
 							<Trash2 className="h-4 w-4 mr-1" /> Delete
 						</Button>
-						<Button variant="outline" size="sm">
-							Archive
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => sendToArchive(selectedRows.map((r) => r.id))}
+							disabled={selectedRows.length === 0}
+						>
+							<Archive className="h-4 w-4 mr-1" /> Archive
 						</Button>
-						<Button variant="outline" size="sm">
-							Reorder
+						<Button
+							variant="outline"
+							size="sm"
+							className="text-orange-500"
+							onClick={() => setIsReorderModalOpen(true)}
+							disabled={selectedRows.length === 0}
+						>
+							<RotateCcw className="h-4 w-4 mr-1" /> Reorder
 						</Button>
 						<Button variant="outline" size="sm" onClick={() => gridApi?.exportDataAsCsv()}>
 							<Download className="h-4 w-4 mr-1" /> Extract
@@ -152,6 +195,44 @@ export default function CallListPage() {
 					/>
 				</CardContent>
 			</Card>
+
+			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle className="text-orange-500">
+							Reorder - Reason Required
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div>
+							<Label>Reason for Reorder</Label>
+							<Input
+								value={reorderReason}
+								onChange={(e) => setReorderReason(e.target.value)}
+								placeholder="e.g., Wrong part, Customer cancelled"
+							/>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							This will send the selected items back to the Orders view.
+						</p>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsReorderModalOpen(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="renault"
+							onClick={handleConfirmReorder}
+							disabled={!reorderReason.trim()}
+						>
+							Confirm Reorder
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<RowModals
 				activeModal={activeModal}

@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Renault System
 
-## Getting Started
+A premium, high-performance maintenance management system built with Next.js 15 and AG Grid. Designed for organized tracking of service orders, inventory, call lists, and bookings.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework**: [Next.js 15.1](https://nextjs.org/) (App Router)
+- **UI Components**: [Shadcn UI](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Data Grid**: [AG Grid Community 32.3](https://www.ag-grid.com/)
+- **State Management**: [Zustand 5](https://github.com/pmndrs/zustand) (with Persistence & Slices)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Linting/Formatting**: [Biome](https://biomejs.dev/)
+- **Testing**: [Vitest](https://vitest.dev/)
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- Node.js 18.17 or later
+- npm (or yarn / pnpm / bun)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd renault-system
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```text
+src/
+├── app/           # Next.js App Router routes & layouts
+├── components/    # Feature-based & shared UI components
+│   ├── booking/   # Booking-specific logic
+│   ├── grid/      # Core AG Grid implementation & hooks
+│   ├── shared/    # Common layouts, modals, and headers
+│   └── ui/        # Atomic UI primitives (shadcn)
+├── hooks/         # Global custom hooks (modals, row logic)
+├── lib/           # Utilities, AG Grid configuration, printing
+├── store/         # Zustand store with domain-driven slices
+└── types/         # Centralized TypeScript definitions
+```
 
-## Learn More
+## 📜 Features
 
-To learn more about Next.js, take a look at the following resources:
+See [features.md](file:///d:/renault-system/features.md) for a detailed breakdown of all system capabilities.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧪 Testing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run unit and integration tests:
+```bash
+npm run test
+```
 
-## Deploy on Vercel
+For UI-based test watching:
+```bash
+npm run test:ui
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🏗️ Build & Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Build the production application:
+```bash
+npm run build
+```
+
+This project is configured for **standalone** output, optimized for Docker/container deployments.
+
+---
+
+Built with ❤️ for modern service management.

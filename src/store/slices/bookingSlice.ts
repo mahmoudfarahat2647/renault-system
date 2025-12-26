@@ -15,6 +15,13 @@ export const createBookingSlice: StateCreator<
         { id: "reschedule", label: "Reschedule", color: "bg-blue-500" },
     ],
 
+    /**
+     * Moves rows from various source lists (Main, Orders, Call) to the Booking list.
+     * @param ids - Array of row IDs to book.
+     * @param bookingDate - The scheduled date for the appointment.
+     * @param bookingNote - Optional note for the booking.
+     * @param bookingStatus - Optional initial booking status.
+     */
     sendToBooking: (ids, bookingDate, bookingNote, bookingStatus) => {
         set((state) => {
             const rowsFromMainSheet = state.rowData.filter((r) =>
@@ -54,6 +61,11 @@ export const createBookingSlice: StateCreator<
         get().addCommit("Send to Booking");
     },
 
+    /**
+     * Updates the booking status of a specific row across all slices.
+     * @param id - The ID of the row to update.
+     * @param bookingStatus - The new booking status value.
+     */
     updateBookingStatus: (id, bookingStatus) => {
         const updateInArray = (arr: PendingRow[]) =>
             arr.map((row) => (row.id === id ? { ...row, bookingStatus } : row));
@@ -68,6 +80,10 @@ export const createBookingSlice: StateCreator<
         get().debouncedCommit("Update Booking Status");
     },
 
+    /**
+     * Adds a new booking status definition to the system.
+     * @param status - The status definition object (id, label, color).
+     */
     addBookingStatusDef: (status) => {
         set((state) => ({
             bookingStatuses: [...state.bookingStatuses, status],
@@ -75,6 +91,10 @@ export const createBookingSlice: StateCreator<
         get().addCommit("Add Booking Status Definition");
     },
 
+    /**
+     * Removes a booking status definition from the system by ID.
+     * @param id - The ID of the status definition to remove.
+     */
     removeBookingStatusDef: (id) => {
         set((state) => ({
             bookingStatuses: state.bookingStatuses.filter((s) => s.id !== id),
