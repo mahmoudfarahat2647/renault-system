@@ -33,7 +33,6 @@ export const DataGrid = React.memo(function DataGrid({
 
 	const defaultColDef = useMemo<ColDef>(
 		() => ({
-			sortable: true,
 			filter: true,
 			floatingFilter: showFloatingFilters,
 			resizable: true,
@@ -114,7 +113,7 @@ export const DataGrid = React.memo(function DataGrid({
 
 	return (
 		<div
-			className="ag-theme-alpine-dark w-full h-full"
+			className={`ag-theme-alpine-dark w-full h-full ${showFloatingFilters ? "show-filter-icons" : ""}`}
 			style={{ height: height || "100%", width: "100%" }}
 		>
 			<AgGridReact
