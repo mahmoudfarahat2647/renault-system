@@ -99,6 +99,7 @@ export interface UIActions {
 
 export interface HistoryState {
     commits: CommitLog[];
+    undoStack: CommitLog[];
     redos: CommitLog[];
 }
 

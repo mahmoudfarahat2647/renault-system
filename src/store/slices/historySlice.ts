@@ -12,6 +12,7 @@ export const createHistorySlice: StateCreator<
     HistoryState & HistoryActions
 > = (set, get) => ({
     commits: [],
+    undoStack: [],
     redos: [],
 
     addCommit: (actionName) => {
@@ -38,7 +39,7 @@ export const createHistorySlice: StateCreator<
         };
 
         set((state) => {
-            // Filter history to keep only last 48 hours
+            // Filter history to keep only last 48 hours for Audit Log
             const fortyEightHoursAgo = new Date();
             fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
 
@@ -47,7 +48,8 @@ export const createHistorySlice: StateCreator<
             );
 
             return {
-                commits: [...filteredCommits.slice(-49), commit],
+                commits: [...filteredCommits.slice(-49), commit], // Audit Log (Persistent-ish)
+                undoStack: [...state.undoStack, commit], // Session Undo History
                 redos: [],
             };
         });
@@ -69,6 +71,7 @@ export const createHistorySlice: StateCreator<
             set({
                 ...targetCommit.snapshot,
                 redos: [],
+                undoStack: [...state.undoStack, targetCommit], // Add search jump to undo stack
             });
             // Add a restoration record to history
             get().addCommit(`Restored to: ${targetCommit.actionName}`);
@@ -77,8 +80,9 @@ export const createHistorySlice: StateCreator<
 
     undo: () => {
         const state = get();
-        if (state.commits.length === 0) return;
+        if (state.undoStack.length === 0) return;
 
+        // Current state to be pushed to redo stack
         const currentSnapshot = {
             rowData: structuredClone(state.rowData),
             ordersRowData: structuredClone(state.ordersRowData),
@@ -88,11 +92,11 @@ export const createHistorySlice: StateCreator<
             bookingStatuses: structuredClone(state.bookingStatuses),
         };
 
-        const lastCommit = state.commits[state.commits.length - 1];
+        const lastCommit = state.undoStack[state.undoStack.length - 1];
 
         set({
             ...lastCommit.snapshot,
-            commits: state.commits.slice(0, -1),
+            undoStack: state.undoStack.slice(0, -1), // Remove from Session Stack
             redos: [
                 ...state.redos,
                 {
@@ -102,6 +106,7 @@ export const createHistorySlice: StateCreator<
                     snapshot: currentSnapshot,
                 },
             ],
+            // NOTE: We do NOT touch state.commits (Audit Log)
         });
     },
 
@@ -123,8 +128,8 @@ export const createHistorySlice: StateCreator<
         set({
             ...lastRedo.snapshot,
             redos: state.redos.slice(0, -1),
-            commits: [
-                ...state.commits,
+            undoStack: [
+                ...state.undoStack,
                 {
                     id: generateId(),
                     actionName: "Undo",
@@ -136,11 +141,15 @@ export const createHistorySlice: StateCreator<
     },
 
     clearHistory: () => {
-        set({ commits: [], redos: [] });
+        set({ commits: [], undoStack: [], redos: [] });
     },
 
     commitSave: () => {
-        get().addCommit("Manual Checkpoint");
-        set({ redos: [] });
+        // Ctrl+S functionality: Checkpoint/Save
+        get().addCommit("Manual Checkpoint (Saved)");
+        set({
+            undoStack: [], // Clear session undo history
+            redos: []      // Clear redo history
+        });
     },
 });

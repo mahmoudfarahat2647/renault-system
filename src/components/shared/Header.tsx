@@ -15,6 +15,7 @@ export const Header = React.memo(function Header() {
 
 	const {
 		commits,
+		undoStack,
 		redos,
 		undo,
 		redo,
@@ -139,10 +140,10 @@ export const Header = React.memo(function Header() {
 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
 					<button
 						onClick={undo}
-						disabled={commits.length === 0}
+						disabled={undoStack.length === 0}
 						className={cn(
 							"p-2 rounded-lg transition-all",
-							commits.length > 0
+							undoStack.length > 0
 								? "text-gray-400 hover:text-white hover:bg-white/10"
 								: "text-gray-700 cursor-not-allowed",
 						)}
