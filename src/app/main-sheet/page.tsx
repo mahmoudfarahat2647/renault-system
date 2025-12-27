@@ -56,10 +56,12 @@ export default function MainSheetPage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
+		saveArchive,
 	} = useRowModals(updateOrder);
 
 	const columns = useMemo(
@@ -178,6 +180,11 @@ export default function MainSheetPage() {
 							onLockToggle={handleLockToggle}
 							onUpdateStatus={handleUpdatePartStatus}
 							onBooking={() => setIsBookingModalOpen(true)}
+							onArchive={() => {
+								if (selectedRows.length > 0) {
+									handleArchiveClick(selectedRows[0]);
+								}
+							}}
 							onSendToCallList={() => {
 								sendToCallList(selectedRows.map((r) => r.id));
 								setSelectedRows([]);
@@ -246,6 +253,7 @@ export default function MainSheetPage() {
 				onSaveNote={saveNote}
 				onSaveReminder={saveReminder}
 				onSaveAttachment={saveAttachment}
+				onSaveArchive={saveArchive}
 			/>
 
 			<BookingCalendarModal

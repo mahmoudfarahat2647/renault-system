@@ -166,6 +166,7 @@ export default function ArchivePage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
+					onSaveArchive={() => { }}
 				/>
 
 				{/* Reorder Reason Modal */}

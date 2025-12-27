@@ -13,6 +13,7 @@ import {
 	Send,
 	Tag,
 	Trash2,
+	Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ interface OrdersToolbarProps {
 	onBulkAttach: () => void;
 	onPrint: () => void;
 	onReserve: () => void;
+	onArchive: () => void;
 	onShareToLogistics: () => void;
 	onExtract: () => void;
 	onFilterToggle: () => void;
@@ -45,6 +47,7 @@ export const OrdersToolbar = ({
 	onBulkAttach,
 	onPrint,
 	onReserve,
+	onArchive,
 	onShareToLogistics,
 	onExtract,
 	onFilterToggle,
@@ -140,6 +143,21 @@ export const OrdersToolbar = ({
 					<TooltipContent>Print Order</TooltipContent>
 				</Tooltip>
 
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							size="icon"
+							variant="ghost"
+							className="text-gray-400 hover:text-white h-8 w-8"
+							disabled={selectedCount === 0}
+							onClick={onArchive}
+						>
+							<Archive className="h-3.5 w-3.5" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Archive</TooltipContent>
+				</Tooltip>
 
 				<Tooltip>
 					<TooltipTrigger asChild>

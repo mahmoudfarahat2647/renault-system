@@ -47,16 +47,26 @@ export default function OrdersPage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
+		saveArchive,
 	} = useRowModals(updateOrder);
 
 	const columns = useMemo(
 		() =>
-			getOrdersColumns(handleNoteClick, handleReminderClick, handleAttachClick),
-		[handleNoteClick, handleReminderClick, handleAttachClick],
+			getOrdersColumns(
+				handleNoteClick,
+				handleReminderClick,
+				handleAttachClick,
+			),
+		[
+			handleNoteClick,
+			handleReminderClick,
+			handleAttachClick,
+		],
 	);
 
 	const handleSelectionChanged = (rows: PendingRow[]) => {
@@ -210,6 +220,7 @@ export default function OrdersPage() {
 							onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
 							onPrint={handlePrint}
 							onReserve={handleReserve}
+							onArchive={() => handleArchiveClick(selectedRows[0])}
 							onShareToLogistics={handleShareToLogistics}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
@@ -242,6 +253,7 @@ export default function OrdersPage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
+					onSaveArchive={saveArchive}
 				/>
 
 				<EditAttachmentModal

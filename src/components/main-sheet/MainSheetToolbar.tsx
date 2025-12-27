@@ -11,6 +11,7 @@ import {
 	Tag,
 	Trash2,
 	Unlock,
+	Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ interface MainSheetToolbarProps {
 	onLockToggle: () => void;
 	onUpdateStatus: (status: string) => void;
 	onBooking: () => void;
+	onArchive: () => void;
 	onSendToCallList: () => void;
 	onDelete: () => void;
 	onExtract: () => void;
@@ -40,6 +42,7 @@ export const MainSheetToolbar = ({
 	onLockToggle,
 	onUpdateStatus,
 	onBooking,
+	onArchive,
 	onSendToCallList,
 	onDelete,
 	onExtract,
@@ -101,6 +104,21 @@ export const MainSheetToolbar = ({
 						</Button>
 					</TooltipTrigger>
 					<TooltipContent>Booking</TooltipContent>
+				</Tooltip>
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="text-gray-400 hover:text-white hover:bg-white/5 h-8 w-8"
+							disabled={isLocked || selectedCount === 0}
+							onClick={onArchive}
+						>
+							<Archive className="h-4 w-4" />
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>Archive</TooltipContent>
 				</Tooltip>
 
 				<Tooltip>

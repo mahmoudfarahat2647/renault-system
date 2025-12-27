@@ -5,6 +5,7 @@ import type { PendingRow } from "@/types";
 import { EditAttachmentModal } from "./EditAttachmentModal";
 import { EditNoteModal } from "./EditNoteModal";
 import { EditReminderModal } from "./EditReminderModal";
+import { ArchiveReasonModal } from "./ArchiveReasonModal";
 
 interface RowModalsProps {
 	activeModal: RowModalType;
@@ -15,6 +16,7 @@ interface RowModalsProps {
 		reminder: { date: string; time: string; subject: string } | null | undefined,
 	) => void;
 	onSaveAttachment: (path: string | undefined) => void;
+	onSaveArchive: (reason: string) => void;
 }
 
 export const RowModals = ({
@@ -24,6 +26,7 @@ export const RowModals = ({
 	onSaveNote,
 	onSaveReminder,
 	onSaveAttachment,
+	onSaveArchive,
 }: RowModalsProps) => {
 	if (!currentRow) return null;
 
@@ -46,6 +49,11 @@ export const RowModals = ({
 				onOpenChange={(open) => !open && onClose()}
 				initialPath={currentRow.attachmentPath}
 				onSave={onSaveAttachment}
+			/>
+			<ArchiveReasonModal
+				open={activeModal === "archive"}
+				onOpenChange={(open) => !open && onClose()}
+				onSave={onSaveArchive}
 			/>
 		</>
 	);

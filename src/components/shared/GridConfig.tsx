@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { Bell, History, Paperclip, StickyNote } from "lucide-react";
+import { Archive, Bell, History, Paperclip, StickyNote } from "lucide-react";
 import { getVinColor } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartStatusDef, PendingRow } from "@/types";
@@ -68,12 +68,6 @@ export const ActionCellRenderer = (params: ICellRendererParams<PendingRow>) => {
 				}}
 			>
 				<Bell className="h-3.5 w-3.5" />
-			</button>
-			<button
-				className={`transition-colors text-gray-600 hover:text-gray-400`}
-				title="History"
-			>
-				<History className="h-3.5 w-3.5" />
 			</button>
 		</div>
 	);

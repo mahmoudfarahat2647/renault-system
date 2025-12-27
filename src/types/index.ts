@@ -66,6 +66,8 @@ export interface PendingRow {
 		time: string;
 		subject: string;
 	} | null;
+	archiveReason?: string;
+	archivedAt?: string;
 	sourceType?: string; // For global search identification
 }
 

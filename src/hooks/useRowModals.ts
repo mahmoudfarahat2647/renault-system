@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import type { PendingRow } from "@/types";
 
-export type RowModalType = "note" | "reminder" | "attachment" | null;
+export type RowModalType = "note" | "reminder" | "attachment" | "archive" | null;
 
 export const useRowModals = (
 	onUpdate: (id: string, updates: Partial<PendingRow>) => void,
@@ -24,6 +24,11 @@ export const useRowModals = (
 	const handleAttachClick = useCallback((row: PendingRow) => {
 		setCurrentRow(row);
 		setActiveModal("attachment");
+	}, []);
+
+	const handleArchiveClick = useCallback((row: PendingRow) => {
+		setCurrentRow(row);
+		setActiveModal("archive");
 	}, []);
 
 	const closeModal = useCallback(() => {
@@ -72,15 +77,31 @@ export const useRowModals = (
 		[currentRow, onUpdate, closeModal],
 	);
 
+	const saveArchive = useCallback(
+		(reason: string) => {
+			if (currentRow) {
+				onUpdate(currentRow.id, {
+					status: "Archived",
+					archiveReason: reason,
+					archivedAt: new Date().toISOString(),
+				});
+				closeModal();
+			}
+		},
+		[currentRow, onUpdate, closeModal],
+	);
+
 	return {
 		activeModal,
 		currentRow,
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
+		saveArchive,
 	};
 };

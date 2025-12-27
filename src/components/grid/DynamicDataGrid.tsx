@@ -57,4 +57,4 @@ if (typeof window !== "undefined") {
 }
 
 // Correctly type the memoized dynamic component to preserve generics
-export const DynamicDataGrid = memo(DataGridComponent) as <T extends { id?: string; vin?: string }>(props: DataGridProps<T>) => JSX.Element;
+export const DynamicDataGrid = memo(DataGridComponent) as <T extends { id?: string; vin?: string }>(props: DataGridProps<T>) => React.ReactNode;

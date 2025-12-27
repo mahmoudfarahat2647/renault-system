@@ -62,10 +62,12 @@ export default function CallListPage() {
 		handleNoteClick,
 		handleReminderClick,
 		handleAttachClick,
+		handleArchiveClick,
 		closeModal,
 		saveNote,
 		saveReminder,
 		saveAttachment,
+		saveArchive,
 	} = useRowModals(updateOrder);
 
 	const columns = useMemo(
@@ -150,7 +152,11 @@ export default function CallListPage() {
 									size="icon"
 									variant="ghost"
 									className="text-gray-400 hover:text-white h-8 w-8"
-									onClick={() => sendToArchive(selectedRows.map((r) => r.id))}
+									onClick={() => {
+										if (selectedRows.length > 0) {
+											handleArchiveClick(selectedRows[0]);
+										}
+									}}
 									disabled={selectedRows.length === 0}
 								>
 									<Archive className="h-3.5 w-3.5" />
@@ -276,6 +282,7 @@ export default function CallListPage() {
 					onSaveNote={saveNote}
 					onSaveReminder={saveReminder}
 					onSaveAttachment={saveAttachment}
+					onSaveArchive={saveArchive}
 				/>
 
 				<BookingCalendarModal
