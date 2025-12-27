@@ -30,6 +30,8 @@ export default function OrdersPage() {
 		deleteOrders,
 		sendToBooking,
 		sendToArchive,
+		partStatuses,
+		updatePartStatus,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -59,11 +61,13 @@ export default function OrdersPage() {
 	const columns = useMemo(
 		() =>
 			getOrdersColumns(
+				partStatuses,
 				handleNoteClick,
 				handleReminderClick,
 				handleAttachClick,
 			),
 		[
+			partStatuses,
 			handleNoteClick,
 			handleReminderClick,
 			handleAttachClick,
@@ -177,6 +181,12 @@ export default function OrdersPage() {
 		toast.success(`${ids.length} order(s) sent to Booking`);
 	};
 
+	const handleUpdatePartStatus = (status: string) => {
+		if (selectedRows.length === 0) return;
+		selectedRows.forEach((row) => updatePartStatus(row.id, status));
+		toast.success(`Part status updated to "${status}"`);
+	};
+
 	const handleSaveBulkAttachment = (path: string | undefined) => {
 		if (selectedRows.length === 0) return;
 		updateOrders(
@@ -229,6 +239,8 @@ export default function OrdersPage() {
 							onShareToLogistics={handleShareToLogistics}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
+							partStatuses={partStatuses}
+							onUpdateStatus={handleUpdatePartStatus}
 						/>
 
 						<div className="flex-1 min-h-[500px] border border-white/10 rounded-xl overflow-hidden">
@@ -236,6 +248,14 @@ export default function OrdersPage() {
 								rowData={ordersRowData}
 								columnDefs={columns}
 								onSelectionChanged={handleSelectionChanged}
+								onCellValueChanged={(params) => {
+									if (
+										params.colDef.field === "partStatus" &&
+										params.newValue !== params.oldValue
+									) {
+										updatePartStatus(params.data.id, params.newValue);
+									}
+								}}
 								onGridReady={(api) => setGridApi(api)}
 								showFloatingFilters={showFilters}
 							/>

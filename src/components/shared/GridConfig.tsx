@@ -285,11 +285,33 @@ export const getBaseColumns = (
 	];
 
 export const getOrdersColumns = (
+	partStatuses: PartStatusDef[] = [],
 	onNoteClick?: (row: PendingRow) => void,
 	onReminderClick?: (row: PendingRow) => void,
 	onAttachClick?: (row: PendingRow) => void,
 ): ColDef<PendingRow>[] => [
 		...getBaseColumns(onNoteClick, onReminderClick, onAttachClick),
+		{
+			headerName: "PART STATUS",
+			field: "partStatus",
+			width: 100,
+			minWidth: 100,
+			editable: true,
+			cellRenderer: PartStatusRenderer,
+			cellRendererParams: {
+				partStatuses: Array.isArray(partStatuses) ? partStatuses : [],
+			},
+			cellEditor: "agSelectCellEditor",
+			cellEditorParams: {
+				values:
+					Array.isArray(partStatuses) && partStatuses.length > 0
+						? partStatuses
+							.filter((s) => s && typeof s.label === "string")
+							.map((s) => s.label)
+						: [],
+			},
+			cellClass: "flex items-center justify-center",
+		},
 		{
 			headerName: "REQUESTER",
 			field: "requester",
