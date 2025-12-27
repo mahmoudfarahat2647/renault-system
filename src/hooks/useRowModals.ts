@@ -7,9 +7,11 @@ export type RowModalType = "note" | "reminder" | "attachment" | "archive" | null
 
 export const useRowModals = (
 	onUpdate: (id: string, updates: Partial<PendingRow>) => void,
+	onArchive?: (ids: string[], reason: string) => void,
 ) => {
 	const [activeModal, setActiveModal] = useState<RowModalType>(null);
 	const [currentRow, setCurrentRow] = useState<PendingRow | null>(null);
+	const [targetIds, setTargetIds] = useState<string[]>([]);
 
 	const handleNoteClick = useCallback((row: PendingRow) => {
 		setCurrentRow(row);
@@ -26,14 +28,16 @@ export const useRowModals = (
 		setActiveModal("attachment");
 	}, []);
 
-	const handleArchiveClick = useCallback((row: PendingRow) => {
+	const handleArchiveClick = useCallback((row: PendingRow, ids?: string[]) => {
 		setCurrentRow(row);
+		setTargetIds(ids || [row.id]);
 		setActiveModal("archive");
 	}, []);
 
 	const closeModal = useCallback(() => {
 		setActiveModal(null);
 		setCurrentRow(null);
+		setTargetIds([]);
 	}, []);
 
 	const saveNote = useCallback(
@@ -79,7 +83,10 @@ export const useRowModals = (
 
 	const saveArchive = useCallback(
 		(reason: string) => {
-			if (currentRow) {
+			if (onArchive && targetIds.length > 0) {
+				onArchive(targetIds, reason);
+				closeModal();
+			} else if (currentRow) {
 				onUpdate(currentRow.id, {
 					status: "Archived",
 					archiveReason: reason,
@@ -88,7 +95,7 @@ export const useRowModals = (
 				closeModal();
 			}
 		},
-		[currentRow, onUpdate, closeModal],
+		[currentRow, targetIds, onArchive, onUpdate, closeModal],
 	);
 
 	return {

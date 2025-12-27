@@ -69,8 +69,9 @@ export const createInventorySlice: StateCreator<
             const bookingRows = state.bookingRowData.filter((r) => ids.includes(r.id));
             const callRows = state.callRowData.filter((r) => ids.includes(r.id));
             const mainRows = state.rowData.filter((r) => ids.includes(r.id));
+            const orderRows = state.ordersRowData.filter((r) => ids.includes(r.id));
 
-            const rowsToMove = [...bookingRows, ...callRows, ...mainRows];
+            const rowsToMove = [...bookingRows, ...callRows, ...mainRows, ...orderRows];
 
             const updatedRows = rowsToMove.map((r) => ({
                 ...r,
@@ -85,6 +86,7 @@ export const createInventorySlice: StateCreator<
                 ),
                 callRowData: state.callRowData.filter((r) => !ids.includes(r.id)),
                 rowData: state.rowData.filter((r) => !ids.includes(r.id)),
+                ordersRowData: state.ordersRowData.filter((r) => !ids.includes(r.id)),
                 archiveRowData: [...state.archiveRowData, ...updatedRows],
             };
         });

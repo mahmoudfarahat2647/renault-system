@@ -163,6 +163,20 @@ export const createUISlice: StateCreator<
         get().addCommit("Remove Reminder Template");
     },
 
+    addReasonTemplate: (template) => {
+        set((state) => ({
+            reasonTemplates: [...state.reasonTemplates, template],
+        }));
+        get().addCommit("Add Reason Template");
+    },
+
+    removeReasonTemplate: (template) => {
+        set((state) => ({
+            reasonTemplates: state.reasonTemplates.filter((t) => t !== template),
+        }));
+        get().addCommit("Remove Reason Template");
+    },
+
     addPartStatusDef: (status) => {
         set((state) => ({
             partStatuses: [...state.partStatuses, status],

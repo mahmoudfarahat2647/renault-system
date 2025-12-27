@@ -68,7 +68,7 @@ export default function CallListPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder);
+	} = useRowModals(updateOrder, sendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -154,7 +154,7 @@ export default function CallListPage() {
 									className="text-gray-400 hover:text-white h-8 w-8"
 									onClick={() => {
 										if (selectedRows.length > 0) {
-											handleArchiveClick(selectedRows[0]);
+											handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
 										}
 									}}
 									disabled={selectedRows.length === 0}

@@ -283,7 +283,7 @@ export const printOrderDocument = (selected: PendingRow[]): void => {
                 <div class="section-header">بيانات العميل والسيارة</div>
                 <div class="customer-section">
                     <div class="info-row"><span class="label">اسم العميل</span><span class="value" style="font-size: 15px; font-weight: 900;">${info.customerName}</span></div>
-                    <div class="info-row"><span class="label">رقم أمر الشغل</span><span class="value" style="direction: ltr; text-align: right;">${info.baseId || '-'}</span></div>
+                    <div class="info-row"><span class="label">رقم أمر الشغل</span><span class="value" style="direction: ltr; text-align: right;">${info.sabNumber || '-'}</span></div>
                     <div class="info-row"><span class="label">موديل السيارة</span><span class="value">${info.model}</span></div>
                     <div class="info-row"><span class="label">رقم الشاسيه</span><span class="value vin-value">${info.vin}</span></div>
                     <div class="info-row"><span class="label">نظام الاصلاح</span><span class="value">${info.repairSystem}</span></div>

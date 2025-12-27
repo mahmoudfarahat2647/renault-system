@@ -29,6 +29,7 @@ export default function OrdersPage() {
 		commitToMainSheet,
 		deleteOrders,
 		sendToBooking,
+		sendToArchive,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -53,7 +54,7 @@ export default function OrdersPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder);
+	} = useRowModals(updateOrder, sendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -220,7 +221,11 @@ export default function OrdersPage() {
 							onBulkAttach={() => setIsBulkAttachmentModalOpen(true)}
 							onPrint={handlePrint}
 							onReserve={handleReserve}
-							onArchive={() => handleArchiveClick(selectedRows[0])}
+							onArchive={() => {
+								if (selectedRows.length > 0) {
+									handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
+								}
+							}}
 							onShareToLogistics={handleShareToLogistics}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}

@@ -34,6 +34,7 @@ export default function MainSheetPage() {
 		updateOrder,
 		deleteOrders,
 		sendToBooking,
+		sendToArchive,
 	} = useAppStore();
 
 	const [gridApi, setGridApi] = useState<any>(null);
@@ -62,7 +63,7 @@ export default function MainSheetPage() {
 		saveReminder,
 		saveAttachment,
 		saveArchive,
-	} = useRowModals(updateOrder);
+	} = useRowModals(updateOrder, sendToArchive);
 
 	const columns = useMemo(
 		() =>
@@ -182,7 +183,7 @@ export default function MainSheetPage() {
 							onBooking={() => setIsBookingModalOpen(true)}
 							onArchive={() => {
 								if (selectedRows.length > 0) {
-									handleArchiveClick(selectedRows[0]);
+									handleArchiveClick(selectedRows[0], selectedRows.map(r => r.id));
 								}
 							}}
 							onSendToCallList={() => {

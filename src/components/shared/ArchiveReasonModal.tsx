@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Trash2 } from "lucide-react";
+import { Archive, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppStore } from "@/store/useStore";
 
 interface ArchiveReasonModalProps {
     open: boolean;
@@ -23,7 +25,10 @@ export const ArchiveReasonModal = ({
     onOpenChange,
     onSave,
 }: ArchiveReasonModalProps) => {
+    const { reasonTemplates, addReasonTemplate, removeReasonTemplate } = useAppStore();
     const [reason, setReason] = useState("");
+    const [isAdding, setIsAdding] = useState(false);
+    const [newTemplate, setNewTemplate] = useState("");
     const maxChars = 200;
 
     useEffect(() => {
@@ -36,6 +41,21 @@ export const ArchiveReasonModal = ({
         if (!reason.trim()) return;
         onSave(reason);
         onOpenChange(false);
+    };
+
+    const handleTemplateClick = (text: string) => {
+        const newReason = reason ? `${reason}\n${text}` : text;
+        if (newReason.length <= maxChars) {
+            setReason(newReason);
+        }
+    };
+
+    const handleAddTemplate = () => {
+        if (newTemplate.trim()) {
+            addReasonTemplate(newTemplate.trim());
+            setNewTemplate("");
+            setIsAdding(false);
+        }
     };
 
     return (
@@ -71,6 +91,71 @@ export const ArchiveReasonModal = ({
                         <p className="text-[11px] text-gray-500 italic">
                             * Archiving will move this record to the archive history.
                         </p>
+                    </div>
+
+                    {/* Quick Templates Section */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                QUICK TEMPLATES
+                            </h4>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsAdding(!isAdding)}
+                                className="h-6 px-2 text-red-400 hover:text-red-400/80 hover:bg-red-400/10 text-[10px]"
+                            >
+                                <Plus className="h-3 w-3 mr-1" />
+                                {isAdding ? "Cancel" : "Add New"}
+                            </Button>
+                        </div>
+
+                        {isAdding && (
+                            <div className="flex gap-2 mb-2">
+                                <Input
+                                    value={newTemplate}
+                                    onChange={(e) => setNewTemplate(e.target.value)}
+                                    placeholder="New template..."
+                                    className="h-8 text-xs bg-[#2c2c2e] border-white/10 focus-visible:ring-red-500/50"
+                                    onKeyDown={(e) => e.key === "Enter" && handleAddTemplate()}
+                                />
+                                <Button
+                                    size="sm"
+                                    onClick={handleAddTemplate}
+                                    className="h-8 bg-red-500 text-white hover:bg-red-600 px-3 text-xs"
+                                >
+                                    Add
+                                </Button>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2">
+                            {reasonTemplates.map((template, idx) => (
+                                <div
+                                    key={`${template}-${idx}`}
+                                    className="group relative flex items-center"
+                                >
+                                    <Button
+                                        variant="secondary"
+                                        className="w-full justify-start text-[11px] h-8 bg-[#2c2c2e] hover:bg-[#3c3c3e] text-gray-300 border border-transparent hover:border-white/10 truncate pr-7"
+                                        onClick={() => handleTemplateClick(template)}
+                                    >
+                                        {template}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-0.5 h-6 w-6 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeReasonTemplate(template);
+                                        }}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

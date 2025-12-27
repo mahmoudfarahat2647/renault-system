@@ -88,6 +88,8 @@ export interface UIActions {
     removeNoteTemplate: (template: string) => void;
     addReminderTemplate: (template: string) => void;
     removeReminderTemplate: (template: string) => void;
+    addReasonTemplate: (template: string) => void;
+    removeReasonTemplate: (template: string) => void;
     addPartStatusDef: (status: PartStatusDef) => void;
     removePartStatusDef: (id: string) => void;
     resetStore: () => void;
