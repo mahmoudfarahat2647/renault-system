@@ -7,6 +7,7 @@ import {
 	Filter,
 	History as HistoryIcon,
 	RotateCcw,
+	Tag,
 	Trash2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -37,6 +38,7 @@ import {
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 
 export default function BookingPage() {
 	const bookingRowData = useAppStore((state) => state.bookingRowData);
@@ -146,6 +148,21 @@ export default function BookingPage() {
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>Filter</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="text-gray-400 hover:text-white h-8 w-8"
+									onClick={() => printReservationLabels(selectedRows)}
+									disabled={selectedRows.length === 0}
+								>
+									<Tag className="h-3.5 w-3.5" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Reserve/Print Label</TooltipContent>
 						</Tooltip>
 
 						<div className="w-px h-5 bg-white/10 mx-1" />

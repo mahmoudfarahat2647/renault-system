@@ -34,6 +34,7 @@ interface MainSheetToolbarProps {
 	onExtract: () => void;
 	onFilterToggle: () => void;
 	onLockToggle: () => void;
+	onReserve: () => void;
 }
 
 export const MainSheetToolbar = ({
@@ -48,6 +49,7 @@ export const MainSheetToolbar = ({
 	onExtract,
 	onFilterToggle,
 	onLockToggle,
+	onReserve,
 }: MainSheetToolbarProps) => {
 	return (
 		<div className="flex items-center justify-between bg-[#141416] p-2 rounded-xl border border-white/5">
@@ -59,6 +61,8 @@ export const MainSheetToolbar = ({
 						<Button
 							size="icon"
 							className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-lg h-8 w-8"
+							onClick={onReserve}
+							disabled={isLocked || selectedCount === 0}
 						>
 							<Tag className="h-4 w-4" />
 						</Button>

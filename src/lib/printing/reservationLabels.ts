@@ -80,7 +80,7 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                         <div class="field-label">اسم القطعة (Part Description)</div>
                         <div class="field-value">${row.description || '-'}</div>
                     </div>
-                    <div class="cell side-cell">
+                    <div class="cell side-cell date-cell">
                         <div class="field-label">تاريخ الحجز (Date)</div>
                         <div class="field-value">${today}</div>
                     </div>
@@ -92,7 +92,7 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                         <div class="field-label">رقم الشاسيه (VIN)</div>
                         <div class="field-value vin-text">${row.vin || '-'}</div>
                     </div>
-                    <div class="cell side-cell">
+                    <div class="cell side-cell part-no-cell">
                         <div class="field-label">رقم القطعة (Part No)</div>
                         <div class="field-value mono-text">${row.partNumber || '-'}</div>
                     </div>
@@ -200,7 +200,9 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 }
                 
                 .main-cell { flex: 1; }
-                .side-cell { width: 130px; flex-shrink: 0; }
+                .date-cell { width: 130px !important; flex-shrink: 0; }
+                .part-no-cell { width: 220px !important; flex-shrink: 0; text-align: right !important; padding-right: 20px !important; }
+                .part-no-cell .field-label { text-align: right !important; padding-left: 0; }
                 .cell:first-child { border-left: 2px solid black; }
                 
                 /* Typography */
@@ -224,9 +226,9 @@ export const printReservationLabels = (selected: PendingRow[]): void => {
                 .vin-text {
                     font-family: 'Courier New', monospace;
                     font-weight: 900;
-                    font-size: 24px;
+                    font-size: 15px;
                     direction: ltr;
-                    letter-spacing: 1px;
+                    letter-spacing: 0.5px;
                 }
                 
                 .mono-text {

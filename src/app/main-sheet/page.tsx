@@ -15,6 +15,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { printReservationLabels } from "@/lib/printing/reservationLabels";
 
 export default function MainSheetPage() {
 	const rowData = useAppStore((state) => state.rowData);
@@ -147,6 +148,7 @@ export default function MainSheetPage() {
 							onDelete={() => setShowDeleteConfirm(true)}
 							onExtract={() => gridApi?.exportDataAsCsv()}
 							onFilterToggle={() => setShowFilters(!showFilters)}
+							onReserve={() => printReservationLabels(selectedRows)}
 						/>
 					</CardContent>
 				</Card>
