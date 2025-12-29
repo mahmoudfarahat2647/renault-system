@@ -2,7 +2,6 @@
 
 import {
 	ArrowUpRight,
-	Calculator,
 	Calendar,
 	FileSpreadsheet,
 	Phone,
@@ -10,7 +9,7 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 const CapacityChart = dynamic(() => import("@/components/dashboard/CapacityChart"), {
 	ssr: false,
@@ -21,21 +20,13 @@ const DistributionChart = dynamic(() => import("@/components/dashboard/Distribut
 	loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-lg" />,
 });
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn, getCalculatorValues } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
-import { WarrantyDatePicker } from "@/components/dashboard/WarrantyDatePicker";
 
 export default function DashboardPage() {
 	const ordersRowData = useAppStore((state) => state.ordersRowData);
 	const rowData = useAppStore((state) => state.rowData);
 	const callRowData = useAppStore((state) => state.callRowData);
-
-	const [warrantyDate, setWarrantyDate] = useState("");
-	const [warrantyResult, setWarrantyResult] = useState<ReturnType<
-		typeof getCalculatorValues
-	> | null>(null);
 
 	// Memoize stats to prevent recalculation
 	const stats = useMemo(
@@ -93,14 +84,6 @@ export default function DashboardPage() {
 		],
 		[],
 	);
-
-	// Auto-calculate warranty when date changes
-	React.useEffect(() => {
-		if (warrantyDate) {
-			const result = getCalculatorValues(warrantyDate);
-			setWarrantyResult(result);
-		}
-	}, [warrantyDate]);
 
 	return (
 		<div className="space-y-5 pb-8 max-w-[1400px] mx-auto">
@@ -210,7 +193,7 @@ export default function DashboardPage() {
 			</div>
 
 			{/* Bottom Grid */}
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 				{/* Capacity Pie Chart */}
 				<Card className="bg-[#0c0c0e] border border-white/[0.08] rounded-xl hover:border-white/12 transition-colors duration-200">
 					<CardContent className="p-6 relative">
@@ -244,92 +227,6 @@ export default function DashboardPage() {
 						</div>
 						<div className="h-[180px] w-full">
 							<DistributionChart data={barData} />
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* Warranty Calculator */}
-				<Card className="bg-[#0c0c0e] border border-white/[0.08] rounded-xl hover:border-white/12 transition-colors duration-200">
-					<CardContent className="p-5">
-						{/* Header */}
-						<div className="flex items-start justify-between mb-1">
-							<div className="flex items-center gap-2">
-								<div className="p-1.5 rounded bg-renault-yellow/10">
-									<Calculator className="w-4 h-4 text-renault-yellow" />
-								</div>
-								<h3 className="text-sm font-semibold text-white">
-									Warranty Calculator
-								</h3>
-							</div>
-							<span
-								className={cn(
-									"text-[10px] font-bold px-2 py-0.5 rounded",
-									warrantyResult
-										? warrantyResult.expired
-											? "bg-red-500/20 text-red-500"
-											: "bg-renault-yellow/20 text-renault-yellow"
-										: "bg-renault-yellow/20 text-renault-yellow",
-								)}
-							>
-								{warrantyResult
-									? warrantyResult.expired
-										? "EXPIRED"
-										: "VALID"
-									: "VALID"}
-							</span>
-						</div>
-
-						{/* Subtitle */}
-						<p className="text-[10px] text-gray-500 mb-5 ml-8">
-							Calculate 3-year term instantly
-						</p>
-
-						{/* Input Section */}
-						<div className="space-y-4">
-							<div>
-								<Label
-									htmlFor="warranty-date"
-									className="text-[10px] text-gray-500 uppercase tracking-wider mb-2 block"
-								>
-									START DATE (D/M)
-								</Label>
-								<div className="relative">
-									<WarrantyDatePicker
-										id="warranty-date"
-										value={warrantyDate}
-										onChange={(value) => setWarrantyDate(value)}
-									/>
-								</div>
-							</div>
-
-							{/* Result Boxes - Always visible */}
-							<div className="grid grid-cols-2 gap-3">
-								<div className="p-3 rounded-lg bg-[#1a1a1c] border border-white/[0.06]">
-									<p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">
-										END DATE
-									</p>
-									<p className="text-sm font-medium text-white">
-										{warrantyResult ? warrantyResult.endDate : "—"}
-									</p>
-								</div>
-								<div className="p-3 rounded-lg bg-[#1a1a1c] border border-white/[0.06]">
-									<p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">
-										REMAINING
-									</p>
-									<p
-										className={cn(
-											"text-sm font-medium",
-											warrantyResult
-												? warrantyResult.expired
-													? "text-red-500"
-													: "text-white"
-												: "text-white",
-										)}
-									>
-										{warrantyResult ? warrantyResult.remainTime : "—"}
-									</p>
-								</div>
-							</div>
 						</div>
 					</CardContent>
 				</Card>

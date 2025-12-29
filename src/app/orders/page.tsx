@@ -14,7 +14,7 @@ import { RowModals } from "@/components/shared/RowModals";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRowModals } from "@/hooks/useRowModals";
-import { generateId, getCalculatorValues } from "@/lib/utils";
+import { generateId } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
@@ -83,8 +83,6 @@ export default function OrdersPage() {
 	};
 
 	const handleSaveOrder = (formData: any, parts: PartEntry[]) => {
-		const warrantyCalc = getCalculatorValues(formData.startWarranty);
-
 		if (isEditMode) {
 			const existingRowIdsInModal = new Set(
 				parts.map((p) => p.rowId).filter(Boolean),
@@ -100,8 +98,8 @@ export default function OrdersPage() {
 				const commonData = {
 					...formData,
 					cntrRdg: parseInt(formData.cntrRdg, 10) || 0,
-					endWarranty: warrantyCalc?.endDate || "",
-					remainTime: warrantyCalc?.remainTime || "",
+					endWarranty: "",
+					remainTime: "",
 				};
 
 				if (part.rowId) {
@@ -144,8 +142,8 @@ export default function OrdersPage() {
 				parts: [part],
 				status: "Ordered",
 				rDate: new Date().toISOString().split("T")[0],
-				endWarranty: warrantyCalc?.endDate || "",
-				remainTime: warrantyCalc?.remainTime || "",
+				endWarranty: "",
+				remainTime: "",
 			}));
 			addOrders(newOrders);
 			toast.success(`${newOrders.length} order(s) created`);

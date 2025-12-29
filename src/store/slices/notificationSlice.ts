@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { CombinedStore, NotificationState, NotificationActions } from "../types";
 import type { AppNotification } from "@/types";
-import { generateId, getCalculatorValues } from "@/lib/utils";
+import { generateId } from "@/lib/utils";
 
 export const createNotificationSlice: StateCreator<
     CombinedStore,
@@ -89,34 +89,6 @@ export const createNotificationSlice: StateCreator<
                     }
                 }
 
-                // 2. Warranty Expirations
-                if (
-                    row.repairSystem === "ضمان" &&
-                    row.startWarranty &&
-                    !existingWarranties.has(row.vin)
-                ) {
-                    const values = getCalculatorValues(row.startWarranty);
-                    if (values && !values.expired) {
-                        const endDate = new Date(row.startWarranty);
-                        endDate.setFullYear(endDate.getFullYear() + 3);
-
-                        const diffTime = endDate.getTime() - now.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                        if (diffDays <= 10 && diffDays > 0) {
-                            newNotifications.push({
-                                type: "warranty",
-                                title: "Warranty Expiring",
-                                description: `VIN ${row.vin} expires in ${diffDays} days`,
-                                referenceId: row.id,
-                                vin: row.vin,
-                                trackingId: row.trackingId,
-                                tabName: source.name,
-                                path: source.path,
-                            });
-                        }
-                    }
-                }
             }
         }
 

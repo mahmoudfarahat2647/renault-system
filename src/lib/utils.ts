@@ -27,63 +27,6 @@ export function detectModelFromVin(vin: string): string | null {
 }
 
 /**
- * Calculate warranty end date and remaining time
- */
-export function getCalculatorValues(dateStr: string) {
-	const startDate = new Date(dateStr);
-	if (Number.isNaN(startDate.getTime())) {
-		return null;
-	}
-	const endDate = new Date(startDate);
-	endDate.setFullYear(endDate.getFullYear() + 3);
-
-	const now = new Date();
-	const expired = now > endDate;
-
-	if (expired) {
-		return {
-			startDate: startDate.toISOString().split("T")[0],
-			endDate: endDate.toISOString().split("T")[0],
-			years: 0,
-			months: 0,
-			days: 0,
-			expired: true,
-			remainTime: "Expired",
-		};
-	}
-
-	let years = endDate.getFullYear() - now.getFullYear();
-	let months = endDate.getMonth() - now.getMonth();
-	let days = endDate.getDate() - now.getDate();
-
-	if (days < 0) {
-		months--;
-		const prevMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
-		days += prevMonth.getDate();
-	}
-
-	if (months < 0) {
-		years--;
-		months += 12;
-	}
-
-	// Format as "year - month - day"
-	try {
-		return {
-			startDate: startDate.toISOString().split("T")[0],
-			endDate: endDate.toISOString().split("T")[0],
-			years,
-			months,
-			days,
-			expired: false,
-			remainTime: `${years} Y , ${months} M , ${days} D`,
-		};
-	} catch (_e) {
-		return null;
-	}
-}
-
-/**
  * Generate a unique consistent badge color based on VIN hash
  * Uses a curated palette of visually distinct dark colors for white text
  */

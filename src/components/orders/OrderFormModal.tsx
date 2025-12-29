@@ -36,7 +36,6 @@ import {
 	cn,
 	detectModelFromVin,
 	generateId,
-	getCalculatorValues,
 } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PartEntry, PendingRow } from "@/types";
@@ -209,15 +208,7 @@ export const OrderFormModal = ({
 		setParts(parts.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
 	};
 
-	const countdown = useMemo(() => {
-		if (formData.repairSystem === "ضمان") {
-			return getCalculatorValues(formData.startWarranty);
-		}
-		return null;
-	}, [formData.repairSystem, formData.startWarranty]);
-
 	const isHighMileage = (parseInt(formData.cntrRdg, 10) || 0) >= 100000;
-	const isExpired = countdown?.expired || false;
 
 	const partValidationWarnings = useMemo(() => {
 		const warnings: Record<
@@ -262,13 +253,9 @@ export const OrderFormModal = ({
 			);
 			return;
 		}
-		if (formData.repairSystem === "ضمان" && (isHighMileage || isExpired)) {
+		if (formData.repairSystem === "ضمان" && isHighMileage) {
 			toast.error(
-				isHighMileage && isExpired
-					? "Ineligible for Warranty: High mileage and expired period."
-					: isHighMileage
-						? "Ineligible for Warranty: Vehicle exceeds 100,000 KM."
-						: "Ineligible for Warranty: Period has expired.",
+				"Ineligible for Warranty: Vehicle exceeds 100,000 KM.",
 			);
 			return;
 		}
@@ -618,13 +605,13 @@ export const OrderFormModal = ({
 														</div>
 														<div className="space-y-1">
 															<Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">
-																Status
+																Warranty Warning
 															</Label>
 															<div className="flex items-center h-9">
-																{countdown && (
-																	<div className="w-full h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter">
-																		<span className="text-[10px] text-white font-mono font-black">
-																			{countdown.remainTime}
+																{isHighMileage && (
+																	<div className="w-full h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center overflow-hidden shadow-inner uppercase tracking-tighter">
+																		<span className="text-[10px] text-red-500 font-mono font-black">
+																			HIGH MILEAGE
 																		</span>
 																	</div>
 																)}
