@@ -247,7 +247,7 @@ export const OrderFormModal = ({
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
-					part.description.trim().toLowerCase()
+				part.description.trim().toLowerCase()
 			) {
 				warnings[part.id] = {
 					type: "mismatch",
@@ -836,29 +836,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																			"duplicate"
+																				"duplicate"
 																				? partValidationWarnings[part.id].value
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																		<Button
-																			variant="ghost"
-																			size="icon"
-																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																			onClick={() =>
-																				handlePartChange(
-																					part.id,
-																					"description",
-																					partValidationWarnings[part.id].value,
-																				)
-																			}
-																			title="Apply existing name"
-																		>
-																			<CheckCircle2 className="h-3 w-3" />
-																		</Button>
-																	)}
+																			<Button
+																				variant="ghost"
+																				size="icon"
+																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																				onClick={() =>
+																					handlePartChange(
+																						part.id,
+																						"description",
+																						partValidationWarnings[part.id].value,
+																					)
+																				}
+																				title="Apply existing name"
+																			>
+																				<CheckCircle2 className="h-3 w-3" />
+																			</Button>
+																		)}
 																</div>
 															)}
 														</div>
@@ -911,35 +911,30 @@ export const OrderFormModal = ({
 						</Button>
 						<div className="flex items-center gap-3">
 							<AnimatePresence>
-								{formData.repairSystem === "ضمان" &&
-									(isHighMileage || isExpired) && (
-										<motion.div
-											initial={{ opacity: 0, scale: 0.95 }}
-											animate={{ opacity: 1, scale: 1 }}
-											exit={{ opacity: 0, scale: 0.95 }}
-										>
-											<Tooltip>
-												<TooltipTrigger asChild>
-													<div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 cursor-help transition-all hover:bg-orange-500/20">
-														<AlertCircle className="h-3.5 w-3.5" />
-														<span className="text-[10px] font-black uppercase tracking-wider">
-															Ineligible
-														</span>
-													</div>
-												</TooltipTrigger>
-												<TooltipContent
-													side="top"
-													className="bg-[#1c1c1f] border-white/10 text-orange-200 text-[10px] p-2 max-w-[200px]"
-												>
-													{isHighMileage && isExpired
-														? "Vehicle exceeds 100,000 KM & Warranty has expired."
-														: isHighMileage
-															? "Vehicle exceeds 100,000 KM limitation."
-															: "The vehicle's warranty period has expired."}
-												</TooltipContent>
-											</Tooltip>
-										</motion.div>
-									)}
+								{formData.repairSystem === "ضمان" && isHighMileage && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.95 }}
+										animate={{ opacity: 1, scale: 1 }}
+										exit={{ opacity: 0, scale: 0.95 }}
+									>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 cursor-help transition-all hover:bg-orange-500/20">
+													<AlertCircle className="h-3.5 w-3.5" />
+													<span className="text-[10px] font-black uppercase tracking-wider">
+														Ineligible
+													</span>
+												</div>
+											</TooltipTrigger>
+											<TooltipContent
+												side="top"
+												className="bg-[#1c1c1f] border-white/10 text-orange-200 text-[10px] p-2 max-w-[200px]"
+											>
+												Vehicle exceeds 100,000 KM limitation.
+											</TooltipContent>
+										</Tooltip>
+									</motion.div>
+								)}
 							</AnimatePresence>
 							<AnimatePresence>
 								{hasValidationErrors && (

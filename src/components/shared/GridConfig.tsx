@@ -252,7 +252,8 @@ export const getBaseColumns = (
 			headerName: "CUSTOMER NAME",
 			field: "customerName",
 			filter: "agTextColumnFilter",
-			minWidth: 140,
+			minWidth: 180,
+			cellClass: "font-medium truncate",
 		},
 		{
 			headerName: "VIN NO/",

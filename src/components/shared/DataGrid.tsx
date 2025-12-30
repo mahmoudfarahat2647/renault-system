@@ -143,6 +143,9 @@ export const DataGrid = React.memo(function DataGrid({
 				ensureDomOrder={!readOnly}
 				// Ensure scrolling works when locked
 				scrollbarWidth={12}
+				autoSizeStrategy={{
+					type: "fitCellContents",
+				}}
 			/>
 		</div>
 	);
