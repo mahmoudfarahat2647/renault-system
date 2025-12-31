@@ -19,15 +19,14 @@ This document provides implementation status and quick reference for the new doc
 
 ### Code Enhancements
 
-- ✅ **JSDoc Comments** - Added to `ordersSlice.ts` for all public actions
-- ✅ **Component JSDoc** - Added to `BookingCalendarModal.tsx` component header
+- ✅ **VINLineCounter** - Added total lines vs unique VINs tracking
+- ✅ **Status Management** - Inline renaming/recoloring with global data integrity
+- ✅ **Toolbar Standardization** - Unified Part Status dropdown across all tabs
+- ✅ **Delete Protection** - Usage-based status deletion restrictions
+- ✅ **JSDoc Comments** - Added to store slices and core components
 - ✅ **PR Template** - Created `.github/pull_request_template.md`
 - ✅ **Git Hooks** - Created `.husky/pre-commit` for documentation reminders
-- ✅ **Package Scripts** - Added `docs` and `docs:serve` scripts to package.json
 - ✅ **Validation Script** - Created `scripts/validate-docs.js` for checking doc integrity
-- ✅ **JSDoc Extraction** - Created `scripts/extract-jsdoc.js` for analyzing code
-- ✅ **Maintenance Guide** - Created `docs/DOCS_MAINTENANCE.md` for documentation workflows
-- ✅ **Hook Integration** - Enhanced `.husky/pre-commit` with validation checks
 
 ### Documentation Quality
 
@@ -429,7 +428,7 @@ Include:
 ---
 
 **Documentation Version**: 1.0
-**Last Updated**: December 30, 2025
+**Last Updated**: January 1, 2026
 **Maintained By**: Development Team
 
 ---

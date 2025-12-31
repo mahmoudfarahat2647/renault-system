@@ -280,6 +280,25 @@ updateBookingStatus("id1", "Completed");
 
 ---
 
+#### `updateBookingStatusDef(id: string, updates: Partial<BookingStatusDef>): void`
+
+**Update booking status definition** (label and color) with bulk renaming support.
+
+```typescript
+const { updateBookingStatusDef } = useAppStore();
+updateBookingStatusDef("pending", {
+  label: "Waiting Confirmation",
+  color: "#f59e0b"
+});
+```
+
+**Data Integrity Behavior**:
+- If `label` is changed, ALL rows in `bookingRowData` with the old label are automatically updated to the new label.
+- Color changes reflect immediately in the UI without modifying row data.
+- Adds "Update Booking Status Definition" to history.
+
+---
+
 #### `completeBooking(id: string): void`
 
 Mark booking as completed and optionally move to Archive.
@@ -419,6 +438,30 @@ Update search/filter query.
 const { setSearchTerm } = useAppStore();
 setSearchTerm("VF1AB000");  // Filter by VIN
 ```
+
+---
+
+#### `updatePartStatusDef(id: string, updates: Partial<PartStatusDef>): void`
+
+**Update part status definition** (label and color) with cross-sheet bulk renaming support.
+
+```typescript
+const { updatePartStatusDef } = useAppStore();
+updatePartStatusDef("arrived", {
+  label: "Arrived & Ready",
+  color: "#10b981"
+});
+```
+
+**Data Integrity Behavior**:
+- If `label` is changed, performs a **global update** across ALL row arrays:
+  - `ordersRowData`
+  - `rowData` (Main Sheet)
+  - `callRowData`
+  - `archiveRowData`
+  - `bookingRowData` (individual line items)
+- Matches by exact label string and replaces with new label.
+- Adds "Update Part Status Definition" to history.
 
 ---
 
@@ -611,4 +654,4 @@ useAppStore.getState().undoStack;  // Undo history
 
 ---
 
-**Last Updated**: December 30, 2025
+**Last Updated**: January 1, 2026

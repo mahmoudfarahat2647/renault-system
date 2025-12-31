@@ -35,8 +35,8 @@ interface PendingRow {
   partNumber: string;            // Part code
   partDescription: string;       // Human-readable part name
   quantity: number;              // Order quantity
-  status: 'Pending' | 'Call' | 'Archived';
-  trackingId: string;            // Auto-generated (ORDER-{baseId})
+  partStatus: string;             // Dynamic part status (lookup in partStatuses)
+  trackingId: string;             // Auto-generated (ORDER-{baseId})
   attachments?: Attachment[];
   notes?: string;
 }
@@ -47,7 +47,8 @@ interface PendingRow {
 - `addOrders(orders)` - Batch import
 - `updateOrder(id, updates)` - Single edit
 - `updateOrders(ids, updates)` - Bulk edit
-- `deleteOrders(ids)` - Batch deletion
+- `updatePartStatusDef(id, updates)` - Update status color/label with bulk renaming
+- `deleteOrders(ids)` - Batch deletion (with usage checks for statuses)
 
 ---
 
@@ -172,10 +173,22 @@ export const useAppStore = create<CombinedStore>()(
 |-------|-------|------------|
 | **Orders** | `ordersRowData[]` | `addOrders`, `updateOrder`, `deleteOrders` |
 | **Inventory** | `rowData[]`, `callRowData[]`, `archiveRowData[]` | `commitToMainSheet`, `updatePartStatus` |
-| **Booking** | `bookingRowData[]`, `bookingStatuses` | `sendToBooking`, `updateBookingStatus` |
+| **Booking** | `bookingRowData[]`, `bookingStatuses` | `sendToBooking`, `updateBookingStatus`, `updateBookingStatusDef` |
 | **Notifications** | `notifications[]`, `notificationInterval` | `addNotification`, `clearNotifications` |
-| **UI** | `selectedRows[]`, `activeTab`, etc. | `setSelectedRows`, `setActiveTab` |
+| **UI** | `selectedRows[]`, `partStatuses[]` | `setSelectedRows`, `updatePartStatusDef` |
 | **History** | `undoStack[]`, `redos[]` | `addCommit`, `undo`, `redo` |
+
+---
+
+### Status Management Logic
+
+The system uses a **Definition-driven Status System** instead of static enumerations:
+
+1. **Definitions**: `partStatuses` and `bookingStatuses` define labels and colors.
+2. **Editing**: Definitions are edited centrally in the Settings menu.
+3. **Data Integrity**: When a definition label is renamed, the store performs a **global scan-and-replace** across all associated data rows to maintain consistency.
+4. **Delete Protection**: Statuses currently in use by any items cannot be deleted. This is enforced via usage counters across all sheets.
+5. **Standardized UI**: All tab toolbars use the `CheckCircle` dropdown for bulk status updates, ensuring a consistent user experience.
 
 ### Persistence Strategy
 
@@ -350,4 +363,4 @@ src/components/
 
 ---
 
-**Last Updated**: December 30, 2025
+**Last Updated**: January 1, 2026

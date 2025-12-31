@@ -375,6 +375,41 @@ const orderColumnDefs = [
 
 ---
 
+### VINLineCounter
+
+**Location**: [`src/components/shared/VINLineCounter.tsx`](../src/components/shared/VINLineCounter.tsx)
+
+**Purpose**: Floating indicator for quick visibility of row and unique VIN counts.
+
+**Features**:
+- Real-time calculation of total lines vs unique VINs.
+- Semi-transparent, blur-background design.
+- Clickable/Hover effects for better engagement.
+
+**Props**:
+```typescript
+interface VINLineCounterProps {
+  rows: PendingRow[];
+}
+```
+
+---
+
+### Part Status Toolbar Dropdown
+
+**Location**: Standardized across all page toolbars (`MainSheetToolbar`, `OrdersToolbar`, `BookingPage`, etc.)
+
+**Purpose**: Unified interface for bulk updating part statuses of selected rows.
+
+**Features**:
+- **Standardized Icon**: Uses `CheckCircle` icon.
+- **Rich Visuals**: Shows color bullets alongside status labels.
+- **Bulk Action**: Updates all selected rows simultaneously.
+- **Safety**: Wrapped in a Tooltip explaining the action.
+- **Consistency**: Exact same UI and behavior in Main Sheet, Orders, Booking, Call List, and Archive.
+
+---
+
 ### RowModals
 
 **Location**: [`src/components/shared/RowModals.tsx`](../src/components/shared/RowModals.tsx)
@@ -552,4 +587,4 @@ test("should create and book order", async ({ page }) => {
 
 ---
 
-**Last Updated**: December 30, 2025
+**Last Updated**: January 1, 2026
