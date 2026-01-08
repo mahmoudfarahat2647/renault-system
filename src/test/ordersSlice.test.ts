@@ -33,7 +33,8 @@ describe("ordersSlice", () => {
 		return create<CombinedStore>(
 			(...a) =>
 				({
-					...createOrdersSlice(...a),
+					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
+					...createOrdersSlice(...(a as unknown as any[])),
 					// Mock other slices that ordersSlice depends on
 					addCommit: vi.fn(),
 					debouncedCommit: vi.fn(),

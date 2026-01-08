@@ -27,6 +27,7 @@ interface BookingSidebarProps {
 	onConfirm: (date: string, note: string, status?: string) => void;
 	onOpenChange: (open: boolean) => void;
 	selectedDate: Date;
+	isDateInPast?: boolean;
 }
 
 export const BookingSidebar = ({
@@ -49,6 +50,7 @@ export const BookingSidebar = ({
 	onConfirm,
 	onOpenChange,
 	selectedDate,
+	isDateInPast,
 }: BookingSidebarProps) => {
 	return (
 		<div className="w-[400px] bg-[#0a0a0b] border-l border-white/5 flex flex-col relative">
@@ -92,6 +94,7 @@ export const BookingSidebar = ({
 				onConfirm={onConfirm}
 				onNoteReset={() => setBookingNote("")}
 				onStatusReset={() => setPreBookingStatus("")}
+				isDateInPast={isDateInPast}
 			/>
 		</div>
 	);

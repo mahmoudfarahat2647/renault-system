@@ -53,6 +53,7 @@ export const BookingCalendarModal = ({
 		handleDateSelect,
 		bookingStatuses,
 		updateBookingStatus,
+		isDateInPast,
 	} = useBookingCalendar({ open, initialSearchTerm });
 
 	return (
@@ -117,6 +118,7 @@ export const BookingCalendarModal = ({
 						setBookingNote={setBookingNote}
 						activeCustomerHistoryDates={activeCustomerHistoryDates}
 						selectedDate={selectedDate}
+						isDateInPast={isDateInPast}
 						onOpenChange={onOpenChange}
 						onConfirm={onConfirm}
 						onHistoryDateClick={(date) => {

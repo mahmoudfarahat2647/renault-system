@@ -33,8 +33,10 @@ describe("inventorySlice", () => {
 		return create<CombinedStore>(
 			(...a) =>
 				({
-					...createOrdersSlice(...a),
-					...createInventorySlice(...a),
+					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
+					...createOrdersSlice(...(a as unknown as any[])),
+					// biome-ignore lint/suspicious/noExplicitAny: Bypass middleware checks for testing
+					...createInventorySlice(...(a as unknown as any[])),
 					addCommit: vi.fn(),
 					debouncedCommit: vi.fn(),
 					bookingRowData: [],

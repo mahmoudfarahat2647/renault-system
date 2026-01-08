@@ -19,6 +19,7 @@
 		"docs:serve": "cd docs && python3 -m http.server 8080 || python -m http.server 8080",
 		"docs:validate": "node scripts/validate-docs.js",
 		"docs:extract": "node scripts/extract-jsdoc.js",
+		"testsprite": "echo \"To run TestSprite tests, use an MCP-compatible IDE and enter: Help me test this project with TestSprite.\"",
 		"commit": "pwsh scripts/quick-commit.ps1"
 	},
 	"dependencies": {
@@ -59,6 +60,7 @@
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/react": "^16.3.1",
 		"@testing-library/user-event": "^14.6.1",
+		"@testsprite/testsprite-mcp": "^0.0.18",
 		"@types/node": "^20",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",

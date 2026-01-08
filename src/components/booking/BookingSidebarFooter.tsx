@@ -12,6 +12,7 @@ interface BookingSidebarFooterProps {
 	onConfirm: (date: string, note: string, status?: string) => void;
 	onNoteReset: () => void;
 	onStatusReset: () => void;
+	isDateInPast?: boolean;
 }
 
 export const BookingSidebarFooter = ({
@@ -23,6 +24,7 @@ export const BookingSidebarFooter = ({
 	onConfirm,
 	onNoteReset,
 	onStatusReset,
+	isDateInPast,
 }: BookingSidebarFooterProps) => {
 	const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
 
@@ -34,7 +36,7 @@ export const BookingSidebarFooter = ({
 					onNoteReset();
 					onStatusReset();
 				}}
-				disabled={!!searchQuery || selectedRowsLength === 0}
+				disabled={!!searchQuery || selectedRowsLength === 0 || isDateInPast}
 				className={cn(
 					"h-12 w-full rounded-xl font-bold transition-all text-xs tracking-widest uppercase",
 					selectedRowsLength === 0 || searchQuery
@@ -46,6 +48,8 @@ export const BookingSidebarFooter = ({
 					"Select Items First"
 				) : searchQuery ? (
 					"Clear Search to Book"
+				) : isDateInPast ? (
+					"Cannot Book in Past"
 				) : (
 					<span className="flex items-center gap-2">
 						<Calendar className="h-4 w-4" />

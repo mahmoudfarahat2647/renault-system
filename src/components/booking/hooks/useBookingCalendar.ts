@@ -26,6 +26,12 @@ export function useBookingCalendar({
 		null,
 	);
 
+	const isDateInPast = useMemo(() => {
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		return selectedDate < today;
+	}, [selectedDate]);
+
 	const twoYearsAgo = useMemo(() => subYears(new Date(), 2), []);
 
 	useEffect(() => {
@@ -168,5 +174,6 @@ export function useBookingCalendar({
 		handleDateSelect,
 		bookingStatuses,
 		updateBookingStatus,
+		isDateInPast,
 	};
 }

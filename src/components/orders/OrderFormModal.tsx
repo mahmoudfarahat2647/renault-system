@@ -100,6 +100,8 @@ export const OrderFormModal = ({
 		company: "Renault",
 	});
 
+	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
 	const [parts, setParts] = useState<PartEntry[]>([
 		{ id: generateId(), partNumber: "", description: "" },
 	]);
@@ -263,7 +265,7 @@ export const OrderFormModal = ({
 			if (
 				existingPart &&
 				existingPart.description.trim().toLowerCase() !==
-					part.description.trim().toLowerCase()
+				part.description.trim().toLowerCase()
 			) {
 				warnings[part.id] = {
 					type: "mismatch",
@@ -276,17 +278,50 @@ export const OrderFormModal = ({
 
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
 
+	const validateForm = () => {
+		const newErrors: Partial<Record<keyof FormData, string>> = {};
+
+		if (!formData.customerName.trim()) {
+			newErrors.customerName = "Customer name is required";
+		}
+
+		if (!formData.vin.trim()) {
+			newErrors.vin = "VIN is required";
+		} else if (formData.vin.length !== 17) {
+			newErrors.vin = "VIN must be exactly 17 characters";
+		}
+
+		if (!formData.mobile.trim()) {
+			newErrors.mobile = "Mobile number is required";
+		}
+
+		if (!formData.model) {
+			newErrors.model = "Vehicle model is required";
+		}
+
+		if (formData.repairSystem === "ضمان" && isHighMileage) {
+			newErrors.cntrRdg = "Ineligible for Warranty: Vehicle exceeds 100,000 KM";
+		}
+
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
+
 	const handleLocalSubmit = () => {
+		const isFormValid = validateForm();
+
 		if (hasValidationErrors) {
 			toast.error(
 				"Please correct mismatched part descriptions before submitting.",
 			);
 			return;
 		}
-		if (formData.repairSystem === "ضمان" && isHighMileage) {
-			toast.error("Ineligible for Warranty: Vehicle exceeds 100,000 KM.");
+
+		if (!isFormValid) {
+			toast.error("Please fill in all required fields correctly.");
 			return;
 		}
+
 		onSubmit(formData, parts);
 	};
 
@@ -423,11 +458,17 @@ export const OrderFormModal = ({
 												}
 												className={cn(
 													"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+													errors.customerName && "border-red-500/50 focus:ring-red-500/20",
 													isEditMode
 														? "premium-glow-amber"
 														: "premium-glow-indigo",
 												)}
 											/>
+											{errors.customerName && (
+												<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+													{errors.customerName}
+												</p>
+											)}
 										</div>
 										<div className="space-y-1 group">
 											<Label className="text-[10px] font-bold text-slate-500 ml-1 group-focus-within:text-slate-300 transition-colors uppercase">
@@ -471,12 +512,18 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
+														errors.vin && "border-red-500/50 focus:ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
 													)}
 													maxLength={17}
 												/>
+												{errors.vin && (
+													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+														{errors.vin}
+													</p>
+												)}
 											</div>
 											<div className="col-span-3 space-y-1 group">
 												<Label className="text-[10px] font-bold text-slate-500 ml-1 uppercase">
@@ -494,11 +541,17 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+														errors.cntrRdg && "border-red-500/50 focus:ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
 													)}
 												/>
+												{errors.cntrRdg && (
+													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1 leading-tight">
+														{errors.cntrRdg}
+													</p>
+												)}
 											</div>
 										</div>
 										<div className="grid grid-cols-2 gap-3">
@@ -587,6 +640,11 @@ export const OrderFormModal = ({
 														placeholder="Select model..."
 													/>
 												</div>
+												{errors.model && (
+													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+														{errors.model}
+													</p>
+												)}
 											</div>
 										</div>
 										<div
@@ -878,29 +936,29 @@ export const OrderFormModal = ({
 																		<AlertCircle className="h-3 w-3" />
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
-																			"duplicate"
+																				"duplicate"
 																				? partValidationWarnings[part.id].value
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>
 																	{partValidationWarnings[part.id].type ===
 																		"mismatch" && (
-																		<Button
-																			variant="ghost"
-																			size="icon"
-																			className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
-																			onClick={() =>
-																				handlePartChange(
-																					part.id,
-																					"description",
-																					partValidationWarnings[part.id].value,
-																				)
-																			}
-																			title="Apply existing name"
-																		>
-																			<CheckCircle2 className="h-3 w-3" />
-																		</Button>
-																	)}
+																			<Button
+																				variant="ghost"
+																				size="icon"
+																				className="h-5 w-5 rounded-md hover:bg-red-500/20 text-red-500"
+																				onClick={() =>
+																					handlePartChange(
+																						part.id,
+																						"description",
+																						partValidationWarnings[part.id].value,
+																					)
+																				}
+																				title="Apply existing name"
+																			>
+																				<CheckCircle2 className="h-3 w-3" />
+																			</Button>
+																		)}
 																</div>
 															)}
 														</div>
