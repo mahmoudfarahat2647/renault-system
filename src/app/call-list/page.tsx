@@ -45,7 +45,7 @@ import {
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
@@ -56,26 +56,17 @@ import type { PendingRow } from "@/types";
 export default function CallListPage() {
 	const { data: callRowData = [] } = useOrdersQuery("call");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setCallRowData = useAppStore((state) => state.setCallRowData);
-	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	useEffect(() => {
 		if (callRowData) {
-			setCallRowData(callRowData);
 			checkNotifications();
 		}
-	}, [callRowData, setCallRowData, checkNotifications]);
-
-	useEffect(() => {
-		if (bookingRowData) {
-			setBookingRowData(bookingRowData);
-		}
-	}, [bookingRowData, setBookingRowData]);
+	}, [callRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
@@ -158,17 +149,21 @@ export default function CallListPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
+		const ids = selectedRows.map((r) => r.id);
+		// Send to Orders stage with status and note
+		// 1. Update status/note first (optimistic)
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
 					actionNote: `Reorder Reason: ${reorderReason}`,
 					status: "Reorder",
 				},
-				stage: "orders",
+				stage: "call",
 			});
 		}
+		// 2. Move stage (bulk opportunistic)
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");

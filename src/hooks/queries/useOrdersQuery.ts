@@ -14,21 +14,68 @@ export function useOrdersQuery(stage?: OrderStage) {
 	});
 }
 
-export function useUpdateOrderStageMutation() {
+export function useBulkUpdateOrderStageMutation() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, stage }: { id: string; stage: OrderStage }) =>
-			orderService.updateOrderStage(id, stage),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["orders"] });
-			toast.success("Order stage updated");
+		mutationFn: ({ ids, stage }: { ids: string[]; stage: OrderStage }) =>
+			orderService.updateOrdersStage(ids, stage),
+		onMutate: async ({ ids, stage }) => {
+			// Cancel refetches
+			await queryClient.cancelQueries({ queryKey: ["orders"] });
+
+			// Snapshot current cache states for rollback
+			const previousOrdersCache: Record<string, any[] | undefined> = {};
+			const stages: OrderStage[] = ["orders", "main", "call", "booking", "archive"];
+
+			for (const s of stages) {
+				previousOrdersCache[s] = queryClient.getQueryData(["orders", s]);
+			}
+
+			// Optimistically move items between stages
+			// We find which rows are being moved by looking at all caches
+			const movedRows: any[] = [];
+			const idSet = new Set(ids);
+
+			// 1. Remove from all possible source caches and collect the rows
+			for (const s of stages) {
+				const data = previousOrdersCache[s];
+				if (data) {
+					const remaining = data.filter((row) => {
+						if (idSet.has(row.id)) {
+							movedRows.push({ ...row, stage }); // Update stage locally
+							return false;
+						}
+						return true;
+					});
+					queryClient.setQueryData(["orders", s], remaining);
+				}
+			}
+
+			// 2. Add to destination cache
+			if (movedRows.length > 0) {
+				queryClient.setQueryData(["orders", stage], (old: any[] | undefined) => {
+					const base = old || [];
+					return [...movedRows, ...base];
+				});
+			}
+
+			return { previousOrdersCache };
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: Error handling
-		onError: (error: any) => {
+		onError: (error: any, _variables, context) => {
+			// Rollback all affected caches
+			if (context?.previousOrdersCache) {
+				for (const [key, data] of Object.entries(context.previousOrdersCache)) {
+					queryClient.setQueryData(["orders", key], data);
+				}
+			}
 			const errorMessage =
 				error?.message || error?.hint || error?.details || String(error);
-			toast.error(`Failed to update stage: ${errorMessage}`);
+			toast.error(`Failed to move orders: ${errorMessage}`);
+		},
+		onSettled: () => {
+			// Invalidate everything to be safe
+			queryClient.invalidateQueries({ queryKey: ["orders"] });
 		},
 	});
 }
@@ -71,20 +118,20 @@ export function useSaveOrderMutation() {
 			return { previousOrders };
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: Error handling
-		onError: (error: any, _variables, context) => {
+		onError: (error: any, variables, context) => {
 			if (context?.previousOrders) {
-				queryClient.setQueryData(["orders"], context.previousOrders);
+				queryClient.setQueryData(
+					["orders", variables.stage],
+					context.previousOrders,
+				);
 			}
 			const errorMessage =
 				error?.message || error?.hint || error?.details || String(error);
 			toast.error(`Error saving order: ${errorMessage}`);
 		},
 		onSettled: (_data, _error, { stage }) => {
-			// Delay invalidation slightly to ensure DB propagation and prevent
-			// reading stale data that overwrites our optimistic update
-			setTimeout(() => {
-				queryClient.invalidateQueries({ queryKey: ["orders", stage] });
-			}, 500);
+			// Invalidate immediately, but optimistic UI already handled the visual part
+			queryClient.invalidateQueries({ queryKey: ["orders", stage] });
 		},
 	});
 }

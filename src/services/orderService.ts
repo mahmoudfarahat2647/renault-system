@@ -45,6 +45,17 @@ export const orderService = {
 		return data;
 	},
 
+	async updateOrdersStage(ids: string[], stage: OrderStage) {
+		if (ids.length === 0) return [];
+		const { data, error } = await supabase
+			.from("orders")
+			.update({ stage })
+			.in("id", ids)
+			.select();
+		if (error) throw error;
+		return data;
+	},
+
 	async saveOrder(order: Partial<PendingRow> & { stage: OrderStage }) {
 		const { id, stage, reminder, ...rest } = order;
 

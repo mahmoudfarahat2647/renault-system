@@ -48,7 +48,7 @@ import {
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
@@ -58,19 +58,17 @@ import type { PendingRow } from "@/types";
 
 export default function BookingPage() {
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	useEffect(() => {
 		if (bookingRowData) {
-			setBookingRowData(bookingRowData);
 			checkNotifications();
 		}
-	}, [bookingRowData, setBookingRowData, checkNotifications]);
+	}, [bookingRowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
@@ -139,17 +137,20 @@ export default function BookingPage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
+		const ids = selectedRows.map((r) => r.id);
+		// 1. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
 					actionNote: `Reorder Reason: ${reorderReason}`,
 					status: "Reorder",
 				},
-				stage: "orders",
+				stage: "booking",
 			});
 		}
+		// 2. Move stage (bulk)
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
 		setSelectedRows([]);
 		setIsReorderModalOpen(false);
 		setReorderReason("");

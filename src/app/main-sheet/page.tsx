@@ -28,7 +28,7 @@ import {
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
@@ -38,26 +38,17 @@ import type { PendingRow } from "@/types";
 export default function MainSheetPage() {
 	const { data: rowData = [] } = useOrdersQuery("main");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
-	const setRowData = useAppStore((state) => state.setRowData);
-	const setBookingRowData = useAppStore((state) => state.setBookingRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
 
 	useEffect(() => {
 		if (rowData) {
-			setRowData(rowData);
 			checkNotifications();
 		}
-	}, [rowData, setRowData, checkNotifications]);
-
-	useEffect(() => {
-		if (bookingRowData) {
-			setBookingRowData(bookingRowData);
-		}
-	}, [bookingRowData, setBookingRowData]);
+	}, [rowData, checkNotifications]);
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const updatePartStatus = useAppStore((state) => state.updatePartStatus);
@@ -235,14 +226,14 @@ export default function MainSheetPage() {
 								}
 							}}
 							onSendToCallList={async () => {
-								for (const row of selectedRows) {
-									await updateStageMutation.mutateAsync({
-										id: row.id,
-										stage: "call",
-									});
-								}
+								if (selectedRows.length === 0) return;
+								const ids = selectedRows.map((r) => r.id);
+								await bulkUpdateStageMutation.mutateAsync({
+									ids,
+									stage: "call",
+								});
 								setSelectedRows([]);
-								toast.success("Sent to Call List");
+								toast.success(`${ids.length} item(s) sent to Call List`);
 							}}
 							onDelete={() => setShowDeleteConfirm(true)}
 							onExtract={() => gridApi?.exportDataAsCsv()}
@@ -284,12 +275,11 @@ export default function MainSheetPage() {
 
 											if (allArrived && vinParts.length > 0) {
 												// Move all parts for this VIN to the "call" stage
-												for (const part of vinParts) {
-													await updateStageMutation.mutateAsync({
-														id: part.id,
-														stage: "call",
-													});
-												}
+												const vinIds = vinParts.map((p) => p.id);
+												await bulkUpdateStageMutation.mutateAsync({
+													ids: vinIds,
+													stage: "call",
+												});
 												toast.success(
 													`All parts for VIN ${vin} arrived! Moved to Call List.`,
 													{
