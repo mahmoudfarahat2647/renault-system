@@ -8,7 +8,7 @@ import {
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
@@ -21,7 +21,7 @@ export const useOrdersPageHandlers = () => {
 	const { data: ordersRowData = [] } = useOrdersQuery("orders");
 	const saveOrderMutation = useSaveOrderMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
 	const setOrdersRowData = useAppStore((state) => state.setOrdersRowData);
 	const checkNotifications = useAppStore((state) => state.checkNotifications);
@@ -193,9 +193,8 @@ export const useOrdersPageHandlers = () => {
 			);
 			return;
 		}
-		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "main" });
-		}
+		const ids = selectedRows.map((r) => r.id);
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "main" });
 		setSelectedRows([]);
 		toast.success("Committed to Main Sheet");
 	};
@@ -205,8 +204,10 @@ export const useOrdersPageHandlers = () => {
 		note: string,
 		status?: string,
 	) => {
+		const ids = selectedRows.map((r) => r.id);
+
+		// 1. Update details first (optimistic)
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "booking" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
@@ -217,6 +218,9 @@ export const useOrdersPageHandlers = () => {
 				stage: "booking",
 			});
 		}
+
+		// 2. Move stage (bulk)
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "booking" });
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Booking`);
 	};
@@ -258,9 +262,8 @@ export const useOrdersPageHandlers = () => {
 
 	const handleSendToCallList = async () => {
 		if (selectedRows.length === 0) return;
-		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "call" });
-		}
+		const ids = selectedRows.map((r) => r.id);
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
 		setSelectedRows([]);
 		toast.success(`${selectedRows.length} order(s) sent to Call List`);
 	};
@@ -309,6 +312,6 @@ export const useOrdersPageHandlers = () => {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
-		updateStageMutation,
+		bulkUpdateStageMutation,
 	};
 };

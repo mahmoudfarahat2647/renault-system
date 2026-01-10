@@ -9,7 +9,7 @@ import { getBaseColumns } from "@/components/shared/GridConfig";
 import { Button } from "@/components/ui/button";
 import {
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
@@ -59,7 +59,7 @@ export const SearchResultsView = () => {
 	const partStatuses = useAppStore((state) => state.partStatuses);
 
 	const saveOrderMutation = useSaveOrderMutation();
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 
 	const handleUpdateOrder = useCallback((
 		id: string,
@@ -185,9 +185,8 @@ export const SearchResultsView = () => {
 					});
 
 					if (allArrived) {
-						for (const part of relevantParts) {
-							await updateStageMutation.mutateAsync({ id: part.id, stage: "call" });
-						}
+						const ids = relevantParts.map((p) => p.id);
+						await bulkUpdateStageMutation.mutateAsync({ ids, stage: "call" });
 						toast.success(`All parts for VIN ${vin} arrived! Moved to Call List.`, { duration: 5000 });
 					}
 				}
@@ -195,7 +194,7 @@ export const SearchResultsView = () => {
 				toast.success("Part status updated");
 			}
 		}
-	}, [handleUpdateOrder, rowData, ordersRowData, updateStageMutation]);
+	}, [handleUpdateOrder, rowData, ordersRowData, bulkUpdateStageMutation]);
 
 	if (!searchTerm) return null;
 

@@ -37,7 +37,7 @@ import {
 	useDeleteOrderMutation,
 	useOrdersQuery,
 	useSaveOrderMutation,
-	useUpdateOrderStageMutation,
+	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
 import { useRowModals } from "@/hooks/useRowModals";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ import type { PendingRow } from "@/types";
 
 export default function ArchivePage() {
 	const { data: archiveRowData = [] } = useOrdersQuery("archive");
-	const updateStageMutation = useUpdateOrderStageMutation();
+	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
 	const saveOrderMutation = useSaveOrderMutation();
 
@@ -105,8 +105,12 @@ export default function ArchivePage() {
 			toast.error("Please provide a reason for reorder");
 			return;
 		}
+		const ids = selectedRows.map((r) => r.id);
+		// 1. Move stage (bulk)
+		await bulkUpdateStageMutation.mutateAsync({ ids, stage: "orders" });
+
+		// 2. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
-			await updateStageMutation.mutateAsync({ id: row.id, stage: "orders" });
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {

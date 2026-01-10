@@ -70,7 +70,7 @@ export default function OrdersPage() {
 		handleShareToLogistics,
 		handleSendToCallList,
 		handleDeleteSelected,
-		updateStageMutation,
+		bulkUpdateStageMutation,
 	} = useOrdersPageHandlers();
 
 	const partStatuses = useAppStore((state) => state.partStatuses);
@@ -170,12 +170,11 @@ export default function OrdersPage() {
 											});
 
 											if (allArrived && vinParts.length > 0) {
-												for (const part of vinParts) {
-													await updateStageMutation.mutateAsync({
-														id: part.id,
-														stage: "call",
-													});
-												}
+												const ids = vinParts.map((p) => p.id);
+												await bulkUpdateStageMutation.mutateAsync({
+													ids,
+													stage: "call",
+												});
 												toast.success(
 													`All parts for VIN ${vin} arrived! Moved to Call List.`,
 													{ duration: 5000 },
