@@ -118,6 +118,20 @@ export function useSaveOrderMutation() {
 			return { previousOrders };
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: Error handling
+		onSuccess: (data, variables) => {
+			if (data) {
+				const mappedOrder = orderService.mapSupabaseOrder(data);
+				queryClient.setQueryData<any[]>(
+					["orders", variables.stage],
+					(old) => {
+						if (!old) return [];
+						return old.map((order) =>
+							order.id === mappedOrder.id ? mappedOrder : order,
+						);
+					},
+				);
+			}
+		},
 		onError: (error: any, variables, context) => {
 			if (context?.previousOrders) {
 				queryClient.setQueryData(
@@ -130,7 +144,8 @@ export function useSaveOrderMutation() {
 			toast.error(`Error saving order: ${errorMessage}`);
 		},
 		onSettled: (_data, _error, { stage }) => {
-			// Invalidate immediately, but optimistic UI already handled the visual part
+			// Invalidate immediately to ensure eventual consistency
+			// No delay needed because we manually updated the cache in onSuccess
 			queryClient.invalidateQueries({ queryKey: ["orders", stage] });
 		},
 	});
