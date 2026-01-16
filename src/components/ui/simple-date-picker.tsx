@@ -52,6 +52,7 @@ export function SimpleDatePicker({
             "MM/dd/yyyy",
             "dd-MM-yyyy",
             "MM-dd-yyyy",
+            "dd.MM.yyyy",
             "d/M/yyyy",
             "M/d/yyyy",
             "yyyy/MM/dd",
