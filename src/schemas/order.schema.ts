@@ -26,22 +26,22 @@ export const ReminderSchema = z.object({
 // We enforce critical constraints for validation while transforming existing data.
 export const PendingRowSchema = z.object({
     id: z.string().min(1), // ID is strictly required
-    baseId: z.string().default(""), // Required in type, default to empty if missing
-    trackingId: z.string().default(""),
+    baseId: z.string().nullish().transform(v => v || ""),
+    trackingId: z.string().nullish().transform(v => v || ""),
 
     // Customer Info
-    customerName: z.string().min(1, "Customer name is required"),
-    company: z.string().optional(),
-    vin: z.string().length(17, "VIN must be exactly 17 characters"),
-    mobile: z.string().min(1, "Mobile number is required"),
-    cntrRdg: z.number().nonnegative().optional().default(0), // Default to 0 if missing/invalid
-    model: z.string().min(1, "Vehicle model is required"),
+    customerName: z.string().nullish().transform(v => v || ""),
+    company: z.string().nullish(), // Allow null
+    vin: z.string().nullish().transform(v => v || ""),
+    mobile: z.string().nullish().transform(v => v || ""),
+    cntrRdg: z.preprocess((val) => Number(val) || 0, z.number().nonnegative().default(0)),
+    model: z.string().nullish().transform(v => v || ""),
 
     // Logistics
     parts: z.array(PartEntrySchema).default([]),
-    sabNumber: z.string().default(""),
-    acceptedBy: z.string().default(""),
-    requester: z.string().default(""),
+    sabNumber: z.string().nullish().transform(v => v || ""),
+    acceptedBy: z.string().nullish().transform(v => v || ""),
+    requester: z.string().nullish().transform(v => v || ""),
     requestedBy: z.string().optional(),
     partStatus: z.string().optional(),
 
@@ -54,10 +54,10 @@ export const PendingRowSchema = z.object({
     rDate: z.string().default(""),
 
     // Warranty
-    repairSystem: z.string().default(""),
-    startWarranty: z.string().default(""),
-    endWarranty: z.string().default(""),
-    remainTime: z.string().default(""),
+    repairSystem: z.string().nullish().transform(v => v || ""),
+    startWarranty: z.string().nullish().transform(v => v || ""),
+    endWarranty: z.string().nullish().transform(v => v || ""),
+    remainTime: z.string().nullish().transform(v => v || ""),
 
     // Meta
     noteContent: z.string().optional(),

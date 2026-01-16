@@ -83,6 +83,7 @@ export interface UIState {
 	notes: StickyNote[];
 	partStatuses: PartStatusDef[];
 	isLocked: boolean;
+	beastModeTriggers: Record<string, number>;
 }
 
 export interface UIActions {
@@ -108,6 +109,8 @@ export interface UIActions {
 	updatePartStatusDef: (id: string, updates: Partial<PartStatusDef>) => void;
 	removePartStatusDef: (id: string) => void;
 	setIsLocked: (isLocked: boolean) => void;
+	triggerBeastMode: (id: string, timestamp: number) => void;
+	clearBeastMode: (id: string) => void;
 	resetStore: () => void;
 }
 

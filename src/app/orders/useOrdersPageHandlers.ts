@@ -10,6 +10,7 @@ import {
 	useSaveOrderMutation,
 	useBulkUpdateOrderStageMutation,
 } from "@/hooks/queries/useOrdersQuery";
+import { BeastModeSchema } from "@/schemas/form.schema";
 import { exportToLogisticsCSV } from "@/lib/exportUtils";
 import { printOrderDocument, printReservationLabels } from "@/lib/printing";
 import { calculateEndWarranty, calculateRemainingTime } from "@/lib/utils";
@@ -42,7 +43,8 @@ export const useOrdersPageHandlers = () => {
 		row: PendingRow;
 	} | null>(null);
 
-	// 3. Sync Effect
+	const triggerBeastMode = useAppStore((state) => state.triggerBeastMode);
+	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 	useEffect(() => {
 		if (ordersRowData) {
 			setOrdersRowData(ordersRowData);
@@ -184,9 +186,41 @@ export const useOrdersPageHandlers = () => {
 
 	const handleCommit = async () => {
 		if (selectedRows.length === 0) return;
+
+		// 1. Validate against Beast Mode rules
+		const invalidRows: { id: string; errors: string[] }[] = [];
+		for (const row of selectedRows) {
+			const validationPayload = {
+				...row,
+				cntrRdg: row.cntrRdg || 0, // Ensure it passed as number (schema handles both)
+			};
+			const result = BeastModeSchema.safeParse(validationPayload);
+			if (!result.success) {
+				const errorMessages = Object.entries(result.error.flatten().fieldErrors)
+					.map(([field, msgs]) => `${field}: ${msgs?.[0]}`)
+					.join(", ");
+				invalidRows.push({
+					id: row.trackingId || "Unknown",
+					errors: [errorMessages],
+				});
+				// Activate Shared Beast Mode Timer
+				triggerBeastMode(row.id, Date.now());
+			}
+		}
+
+		if (invalidRows.length > 0) {
+			const first = invalidRows[0];
+			toast.error(
+				`Validation Failed for Order ${first.id}: ${first.errors[0]}. Please edit the order to complete strict requirements.`,
+			);
+			return;
+		}
+
+		// 2. Attachment Check
 		const rowsWithoutPaths = selectedRows.filter(
 			(row) => !row.attachmentPath?.trim(),
 		);
+
 		if (rowsWithoutPaths.length > 0) {
 			toast.error(
 				`${rowsWithoutPaths.length} order(s) missing attachment paths.`,

@@ -266,13 +266,21 @@ export const orderService = {
 
 		if (process.env.NODE_ENV === "development") {
 			if (!parseResult.success) {
+				const errorDetails = parseResult.error.flatten();
+				// Log the actual data that failed validation
 				console.error(
-					`[Strict Validation Failed] Order ID ${row.id}:`,
-					parseResult.error.flatten().fieldErrors,
+					`[Strict Validation Failed] Order ID ${row.id} DATA:`,
+					JSON.stringify(resultObj, null, 2)
 				);
+				// Log the error details explicitly
+				console.error(
+					`[Strict Validation Failed] Order ID ${row.id} ERRORS:`,
+					JSON.stringify(errorDetails, null, 2)
+				);
+
 				// In development, catch these early to prevent "water leak" regressions
 				throw new Error(
-					`Data Constraint Violation: ${JSON.stringify(parseResult.error.flatten().fieldErrors)}`,
+					`Data Constraint Violation for Order ${row.id}. Check console for details.`
 				);
 			}
 			return parseResult.data;

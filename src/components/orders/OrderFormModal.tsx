@@ -11,6 +11,7 @@ import {
 	Package,
 	Pencil,
 	Plus,
+	Timer,
 	User,
 	X,
 } from "lucide-react";
@@ -34,7 +35,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { OrderFormSchema } from "@/schemas/form.schema";
+import {
+	BeastModeSchema,
+	EasyModeSchema,
+	OrderFormSchema,
+} from "@/schemas/form.schema";
 import {
 	calculateEndWarranty,
 	calculateRemainingTime,
@@ -76,12 +81,16 @@ export const OrderFormModal = ({
 }: OrderFormModalProps) => {
 	const rowData = useAppStore((state) => state.rowData);
 	const ordersRowData = useAppStore((state) => state.ordersRowData);
+	const callRowData = useAppStore((state) => state.callRowData);
+	const bookingRowData = useAppStore((state) => state.bookingRowData);
+	const archiveRowData = useAppStore((state) => state.archiveRowData);
 	const models = useAppStore((state) => state.models);
 	const addModel = useAppStore((state) => state.addModel);
 	const removeModel = useAppStore((state) => state.removeModel);
 	const repairSystems = useAppStore((state) => state.repairSystems);
 	const addRepairSystem = useAppStore((state) => state.addRepairSystem);
 	const removeRepairSystem = useAppStore((state) => state.removeRepairSystem);
+	const beastModeTriggers = useAppStore((state) => state.beastModeTriggers);
 
 	const [isBulkMode, setIsBulkMode] = useState(false);
 	const [bulkText, setBulkText] = useState("");
@@ -103,6 +112,11 @@ export const OrderFormModal = ({
 	});
 
 	const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+	const [validationMode, setValidationMode] = useState<"easy" | "beast">("easy");
+	const [beastModeTimer, setBeastModeTimer] = useState<number | null>(null);
+	const [beastModeErrors, setBeastModeErrors] = useState<Set<string>>(
+		new Set(),
+	);
 
 	const [parts, setParts] = useState<PartEntry[]>([
 		{ id: generateId(), partNumber: "", description: "" },
@@ -113,9 +127,10 @@ export const OrderFormModal = ({
 
 	useEffect(() => {
 		if (open) {
+			let initialFormData: FormData;
 			if (isEditMode && selectedRows.length > 0) {
 				const first = selectedRows[0];
-				setFormData({
+				initialFormData = {
 					customerName: first.customerName || "",
 					vin: first.vin || "",
 					mobile: first.mobile || "",
@@ -127,7 +142,7 @@ export const OrderFormModal = ({
 					sabNumber: first.sabNumber || "",
 					acceptedBy: first.acceptedBy || "",
 					company: first.company || "Renault",
-				});
+				};
 
 				const initialParts = selectedRows.map((row) => ({
 					id: generateId(),
@@ -136,6 +151,37 @@ export const OrderFormModal = ({
 					rowId: row.id,
 				}));
 				setParts(initialParts);
+				setFormData(initialFormData);
+
+				// 1. Check for Active Global Timer (from Commit failure)
+				const triggerTime = beastModeTriggers[first.id];
+				const now = Date.now();
+				let remainingGlobalTime = 0;
+
+				if (triggerTime) {
+					const elapsed = Math.floor((now - triggerTime) / 1000);
+					if (elapsed < 30) {
+						remainingGlobalTime = 30 - elapsed;
+					}
+				}
+
+				if (remainingGlobalTime > 0) {
+					// Open in Beast Mode with remaining time
+					setValidationMode("beast");
+					setBeastModeTimer(remainingGlobalTime);
+					// Re-validate to show errors immediately
+					const result = BeastModeSchema.safeParse(initialFormData);
+					if (!result.success) {
+						const fieldErrors = new Set(Object.keys(result.error.flatten().fieldErrors));
+						setBeastModeErrors(fieldErrors);
+					}
+				} else {
+					// 2. Auto-trigger Beast Mode ONLY if explicit validation fails AND no timer expired 
+					// (Actually user requested: "if >30s, just see easy mode")
+					setValidationMode("easy");
+					setBeastModeErrors(new Set());
+					setBeastModeTimer(null);
+				}
 			} else {
 				setFormData({
 					customerName: "",
@@ -155,6 +201,9 @@ export const OrderFormModal = ({
 				setBulkText("");
 				setIsPersonalBulkMode(false);
 				setPersonalBulkText("");
+				setValidationMode("easy");
+				setBeastModeErrors(new Set());
+				setBeastModeTimer(null);
 			}
 		}
 	}, [open, isEditMode, selectedRows]);
@@ -167,6 +216,24 @@ export const OrderFormModal = ({
 			}
 		}
 	}, [formData.vin, formData.model]);
+
+	// Beast Mode Timer Logic
+	useEffect(() => {
+		if (validationMode !== "beast") return;
+
+		const timer = setInterval(() => {
+			setBeastModeTimer((prev) => {
+				if (prev === null || prev <= 1) {
+					setValidationMode("easy");
+					setBeastModeErrors(new Set());
+					return null;
+				}
+				return prev - 1;
+			});
+		}, 1000);
+
+		return () => clearInterval(timer);
+	}, [validationMode]);
 
 	const handlePersonalBulkImport = () => {
 		if (!personalBulkText.trim()) return;
@@ -238,47 +305,78 @@ export const OrderFormModal = ({
 	const partValidationWarnings = useMemo(() => {
 		const warnings: Record<
 			string,
-			{ type: "mismatch" | "duplicate"; value: string }
+			{ type: "mismatch" | "duplicate"; value: string; location?: string }
 		> = {};
 		parts.forEach((part) => {
-			if (!part.partNumber) return;
+			if (!part.partNumber || !formData.vin) return;
 
-			// Check for duplicates in both Main Sheet and Orders Tab
-			const isDuplicateInMain = rowData.some(
-				(r) => r.vin === formData.vin && r.partNumber === part.partNumber,
-			);
-			const isDuplicateInOrders = ordersRowData.some(
-				(r) => r.vin === formData.vin && r.partNumber === part.partNumber,
-			);
+			const upperVin = formData.vin.toUpperCase();
+			const upperPart = part.partNumber.toUpperCase();
 
-			if (isDuplicateInMain || isDuplicateInOrders) {
-				warnings[part.id] = {
-					type: "duplicate",
-					value: "The order already exists",
-				};
-				return;
+			const lists = [
+				{ name: "Main Sheet", rows: rowData },
+				{ name: "Orders", rows: ordersRowData },
+				{ name: "Call List", rows: callRowData },
+				{ name: "Booking", rows: bookingRowData },
+				{ name: "Archive", rows: archiveRowData },
+			];
+
+			// 1. Check for duplicates (VIN + PartNumber)
+			for (const list of lists) {
+				if (
+					list.rows.some(
+						(r) =>
+							r.vin?.toUpperCase() === upperVin &&
+							r.partNumber?.toUpperCase() === upperPart &&
+							r.id !== part.rowId, // Exclude current row if editing
+					)
+				) {
+					warnings[part.id] = {
+						type: "duplicate",
+						value: `The order already exists`,
+						location: list.name,
+					};
+					return;
+				}
 			}
 
-			// Check for description mismatch in both lists
-			const existingPart =
-				rowData.find((r) => r.partNumber === part.partNumber) ||
-				ordersRowData.find((r) => r.partNumber === part.partNumber);
-
-			if (
-				existingPart &&
-				existingPart.description.trim().toLowerCase() !==
-				part.description.trim().toLowerCase()
-			) {
-				warnings[part.id] = {
-					type: "mismatch",
-					value: existingPart.description,
-				};
+			// 2. Check for description mismatch (PartNumber exists with different description)
+			for (const list of lists) {
+				const existingRow = list.rows.find(
+					(r) => r.partNumber?.toUpperCase() === upperPart,
+				);
+				if (
+					existingRow &&
+					existingRow.description.trim().toLowerCase() !==
+					part.description.trim().toLowerCase()
+				) {
+					warnings[part.id] = {
+						type: "mismatch",
+						value: existingRow.description,
+					};
+					return;
+				}
 			}
 		});
 		return warnings;
-	}, [parts, rowData, ordersRowData, formData.vin]);
+	}, [
+		parts,
+		rowData,
+		ordersRowData,
+		callRowData,
+		bookingRowData,
+		archiveRowData,
+		formData.vin,
+	]);
 
 	const hasValidationErrors = Object.keys(partValidationWarnings).length > 0;
+
+	const getFieldError = (fieldName: keyof FormData) => {
+		if (validationMode === "beast") {
+			return beastModeErrors.has(fieldName);
+		}
+		return errors[fieldName] !== undefined;
+	};
 
 	const validateForm = () => {
 		const result = OrderFormSchema.safeParse(formData);
@@ -297,6 +395,35 @@ export const OrderFormModal = ({
 	};
 
 	const handleLocalSubmit = () => {
+		// Identify if we are attempting a "Commit" (Beast Mode Trigger)
+		const isCommitAction = isEditMode && !isMultiSelection; // "Commit" label is shown here
+
+		if (isCommitAction || validationMode === "beast") {
+			// Validate with Beast Mode schema
+			const result = BeastModeSchema.safeParse(formData);
+
+			if (!result.success) {
+				// Enter Beast Mode
+				setValidationMode("beast");
+				setBeastModeTimer(30);
+
+				// Collect missing fields for red highlights
+				const fieldErrors = result.error.flatten().fieldErrors;
+				const missingFields = new Set<string>();
+				for (const key of Object.keys(fieldErrors)) {
+					missingFields.add(key);
+				}
+				setBeastModeErrors(missingFields);
+
+				// Show grouped toast (prevent duplicate toasts with fixed ID)
+				toast.error("Missing Info: Please complete the highlighted fields.", {
+					id: "beast-mode-validation-error",
+				});
+				return;
+			}
+		}
+
+		// Regular validation (Easy Mode) for non-commit or if beast passed
 		const isFormValid = validateForm();
 
 		if (hasValidationErrors) {
@@ -306,7 +433,7 @@ export const OrderFormModal = ({
 			return;
 		}
 
-		if (!isFormValid) {
+		if (!isFormValid && validationMode !== "beast") {
 			toast.error("Please fill in all required fields correctly.");
 			return;
 		}
@@ -360,6 +487,39 @@ export const OrderFormModal = ({
 								</DialogDescription>
 							</div>
 						</div>
+
+						<AnimatePresence>
+							{validationMode === "beast" && beastModeTimer !== null && (
+								<motion.div
+									className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 group cursor-default"
+									initial={{ opacity: 0, y: -5 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -5 }}
+								>
+									<div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-sm">
+										<motion.div
+											className={cn(
+												"w-1.5 h-1.5 rounded-full",
+												beastModeTimer > 10 ? "bg-amber-500/50" : "bg-red-500/50",
+											)}
+											animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+											transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+										/>
+										<span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+											Commit Window:
+										</span>
+										<span
+											className={cn(
+												"text-xs font-mono font-medium transition-colors duration-500",
+												beastModeTimer > 10 ? "text-amber-500/70" : "text-red-500/70",
+											)}
+										>
+											{beastModeTimer}s
+										</span>
+									</div>
+								</motion.div>
+							)}
+						</AnimatePresence>
 					</div>
 				</div>
 
@@ -448,7 +608,8 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-														errors.customerName && "border-red-500/50 focus:ring-red-500/20",
+														getFieldError("customerName") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -503,12 +664,12 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs font-mono tracking-widest rounded-lg px-3 transition-all",
-														errors.vin && "border-red-500/50 focus:ring-red-500/20",
+														getFieldError("vin") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
 													)}
-													maxLength={17}
 												/>
 												{errors.vin && (
 													<p className="text-[9px] text-red-500 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
@@ -532,7 +693,8 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
-														errors.cntrRdg && "border-red-500/50 focus:ring-red-500/20",
+														getFieldError("cntrRdg") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -558,6 +720,8 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+														getFieldError("mobile") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -579,6 +743,8 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+														getFieldError("acceptedBy") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -602,6 +768,8 @@ export const OrderFormModal = ({
 													}
 													className={cn(
 														"bg-[#161618] border-white/5 h-9 text-xs rounded-lg px-3 transition-all",
+														getFieldError("sabNumber") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -615,6 +783,8 @@ export const OrderFormModal = ({
 												<div
 													className={cn(
 														"rounded-lg transition-all",
+														getFieldError("model") &&
+														"border-red-500/50 ring-1 ring-red-500/20",
 														isEditMode
 															? "premium-glow-amber"
 															: "premium-glow-indigo",
@@ -887,7 +1057,7 @@ export const OrderFormModal = ({
 																		<span className="text-[9px] font-bold uppercase tracking-tight">
 																			{partValidationWarnings[part.id].type ===
 																				"duplicate"
-																				? partValidationWarnings[part.id].value
+																				? `${partValidationWarnings[part.id].value} in ${partValidationWarnings[part.id].location}`
 																				: `Existing Name: "${partValidationWarnings[part.id].value}"`}
 																		</span>
 																	</div>

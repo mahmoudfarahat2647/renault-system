@@ -37,6 +37,7 @@ const initialState: UIState = {
 	notes: [],
 	partStatuses: defaultPartStatuses,
 	isLocked: true,
+	beastModeTriggers: {},
 };
 
 export const createUISlice: StateCreator<
@@ -245,6 +246,23 @@ export const createUISlice: StateCreator<
 	},
 
 	setIsLocked: (isLocked) => set({ isLocked }),
+
+	triggerBeastMode: (id, timestamp) => {
+		set((state) => ({
+			beastModeTriggers: {
+				...state.beastModeTriggers,
+				[id]: timestamp,
+			},
+		}));
+	},
+
+	clearBeastMode: (id) => {
+		set((state) => {
+			const newTriggers = { ...state.beastModeTriggers };
+			delete newTriggers[id];
+			return { beastModeTriggers: newTriggers };
+		});
+	},
 
 	resetStore: () => {
 		set({
