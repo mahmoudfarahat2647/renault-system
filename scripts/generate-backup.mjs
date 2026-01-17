@@ -218,7 +218,7 @@ function generateCSV(data) {
         rows.push(values.join(','));
     }
 
-    return rows.join('\n');
+    return '\uFEFF' + rows.join('\n');
 }
 
 runBackup();

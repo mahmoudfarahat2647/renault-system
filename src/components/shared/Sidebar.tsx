@@ -245,6 +245,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			{/* Collapse Button */}
 			<button
 				type="button"
+				suppressHydrationWarning
 				onClick={() => setIsCollapsed(!isCollapsed)}
 				className="flex items-center justify-center h-12 mx-4 mb-4 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors border border-transparent hover:border-white/10"
 			>
@@ -259,6 +260,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			<div className="border-t border-white/10 p-4 bg-black/20">
 				<button
 					type="button"
+					suppressHydrationWarning
 					onClick={() => setSettingsOpen(true)}
 					className={cn(
 						"w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all text-left",

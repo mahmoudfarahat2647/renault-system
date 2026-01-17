@@ -35,6 +35,7 @@ export const NotificationsDropdown = () => {
 		<div className="relative">
 			<button
 				type="button"
+				suppressHydrationWarning
 				onClick={() => setShowNotifications(!showNotifications)}
 				className={cn(
 					"p-2.5 rounded-xl transition-all relative",
@@ -48,9 +49,9 @@ export const NotificationsDropdown = () => {
 					animate={
 						unreadCount > 0
 							? {
-									scale: [1, 1.2, 1],
-									rotate: [0, -10, 10, -10, 10, 0],
-								}
+								scale: [1, 1.2, 1],
+								rotate: [0, -10, 10, -10, 10, 0],
+							}
 							: {}
 					}
 					transition={{

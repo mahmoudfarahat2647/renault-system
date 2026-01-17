@@ -101,13 +101,14 @@ export const Header = React.memo(function Header() {
 						"relative flex items-center rounded-2xl transition-all duration-300",
 						"bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10",
 						isSearchFocused &&
-							"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
+						"bg-black/40 border-renault-yellow/50 ring-1 ring-renault-yellow/20 shadow-[0_0_15px_rgba(255,204,0,0.1)]",
 					)}
 				>
 					<Search className="absolute left-4 h-5 w-5 text-gray-500" />
 					<input
 						id="global-search"
 						type="text"
+						suppressHydrationWarning
 						placeholder="Search system (Cmd+K)..."
 						value={useAppStore((state) => state.searchTerm)}
 						onChange={(e) =>
@@ -140,6 +141,7 @@ export const Header = React.memo(function Header() {
 				<div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/5">
 					<button
 						type="button"
+						suppressHydrationWarning
 						onClick={undo}
 						disabled={undoStack.length === 0}
 						className={cn(
@@ -155,6 +157,7 @@ export const Header = React.memo(function Header() {
 					<div className="w-px h-4 bg-white/10" />
 					<button
 						type="button"
+						suppressHydrationWarning
 						onClick={redo}
 						disabled={redos.length === 0}
 						className={cn(
@@ -170,6 +173,7 @@ export const Header = React.memo(function Header() {
 					<div className="w-px h-4 bg-white/10" />
 					<button
 						type="button"
+						suppressHydrationWarning
 						onClick={commitSave}
 						className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all"
 						title="Save Changes (Cmd+S)"
@@ -181,6 +185,7 @@ export const Header = React.memo(function Header() {
 				<div className="flex items-center gap-2">
 					<button
 						type="button"
+						suppressHydrationWarning
 						onClick={() => window.location.reload()}
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Refresh Page"
@@ -192,6 +197,7 @@ export const Header = React.memo(function Header() {
 
 					<button
 						type="button"
+						suppressHydrationWarning
 						onClick={() => {
 							const {
 								ordersRowData,

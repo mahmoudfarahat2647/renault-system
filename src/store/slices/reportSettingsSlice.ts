@@ -130,16 +130,27 @@ export const createReportSettingsSlice: StateCreator<
     triggerManualBackup: async () => {
         set({ isReportSettingsLoading: true, reportSettingsError: null });
         try {
-            // Call our Next.js API route which has server-side credentials
-            const response = await fetch("/api/trigger-backup", {
+            // Call our Next.js API route using absolute path to prevent resolution issues
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            const response = await fetch(`${baseUrl}/api/trigger-backup`, {
                 method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             if (!response.ok) {
-                const errorData = (await response.json()) as ApiResponse;
-                const errorMessage = !errorData.success
-                    ? errorData.error.message
-                    : "Backup failed";
+                // Handle non-200 responses gracefully
+                let errorMessage = "Backup failed";
+                try {
+                    const errorData = (await response.json()) as ApiResponse;
+                    if (!errorData.success) {
+                        errorMessage = errorData.error.message;
+                    }
+                } catch (e) {
+                    // response wasn't JSON (e.g. 404 HTML or 500 crash)
+                    errorMessage = `Server Error: ${response.status} ${response.statusText}`;
+                }
                 throw new Error(errorMessage);
             }
 
