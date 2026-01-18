@@ -11,7 +11,7 @@ interface BackupReportsTabProps {
 export default function BackupReportsTab({ isLocked }: BackupReportsTabProps) {
     return (
         <div className="w-full space-y-6 fade-in animate-in">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-[58%_42%]">
                 <SchedulingCard isLocked={isLocked} />
                 <RecipientsCard isLocked={isLocked} />
             </div>

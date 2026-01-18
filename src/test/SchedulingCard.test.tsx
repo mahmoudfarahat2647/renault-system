@@ -34,24 +34,32 @@ vi.mock("../components/ui/switch", () => ({
     ),
 }));
 
-vi.mock("../components/ui/select", () => ({
-    Select: ({ children, value, onValueChange, disabled }: any) => (
-        <div data-testid="select">
+vi.mock("../components/reports/FrequencyPicker", () => ({
+    default: ({ value, onChange, disabled }: any) => (
+        <div data-testid="frequency-picker-container">
             <select
-                data-testid="select-trigger"
+                data-testid="frequency-picker"
                 value={value}
-                onChange={(e) => onValueChange(e.target.value)}
+                onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
             >
-                {children}
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
+                <option value="Weekly-0">Weekly, Sun</option>
+                <option value="Weekly-1">Weekly, Mon</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Yearly">Yearly</option>
             </select>
-            <div data-testid="select-content">{children}</div>
         </div>
     ),
-    SelectContent: ({ children }: { children: React.ReactNode }) => <div data-testid="select-content">{children}</div>,
-    SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
-    SelectTrigger: ({ children }: { children: React.ReactNode }) => children,
-    SelectValue: ({ placeholder }: { placeholder: string }) => <option value="">{placeholder}</option>,
+}));
+
+vi.mock("../components/ui/select", () => ({
+    Select: ({ children }: any) => <div>{children}</div>,
+    SelectContent: ({ children }: any) => <div>{children}</div>,
+    SelectItem: ({ children }: any) => <div>{children}</div>,
+    SelectTrigger: ({ children }: any) => <div>{children}</div>,
+    SelectValue: ({ children }: any) => <div>{children}</div>,
 }));
 
 describe("SchedulingCard", () => {
@@ -102,10 +110,10 @@ describe("SchedulingCard", () => {
         render(<SchedulingCard isLocked={false} />);
 
         const switchElement = screen.getByTestId("switch");
-        const selectElement = screen.getByTestId("select-trigger");
+        const pickerElement = screen.getByTestId("frequency-picker");
 
         expect(switchElement).toBeDisabled();
-        expect(selectElement).toBeDisabled();
+        expect(pickerElement).toBeDisabled();
     });
 
     it("should render form fields when reportSettings exist", () => {
@@ -124,12 +132,12 @@ describe("SchedulingCard", () => {
         render(<SchedulingCard isLocked={false} />);
 
         const switchElement = screen.getByTestId("switch");
-        const selectElement = screen.getByTestId("select-trigger");
+        const pickerElement = screen.getByTestId("frequency-picker");
 
         expect(switchElement).not.toBeDisabled();
-        expect(selectElement).not.toBeDisabled();
+        expect(pickerElement).not.toBeDisabled();
         expect(switchElement).toBeChecked();
-        expect(selectElement).toHaveValue("Weekly");
+        expect(pickerElement).toHaveValue("Weekly");
     });
 
     it("should call updateReportSettings when switch is toggled", async () => {
@@ -168,8 +176,8 @@ describe("SchedulingCard", () => {
 
         render(<SchedulingCard isLocked={false} />);
 
-        const selectElement = screen.getByTestId("select-trigger");
-        fireEvent.change(selectElement, { target: { value: "Monthly" } });
+        const pickerElement = screen.getByTestId("frequency-picker");
+        fireEvent.change(pickerElement, { target: { value: "Monthly" } });
 
         expect(mockUpdateReportSettings).toHaveBeenCalledWith({ frequency: "Monthly" });
     });
@@ -190,10 +198,10 @@ describe("SchedulingCard", () => {
         render(<SchedulingCard isLocked={true} />);
 
         const switchElement = screen.getByTestId("switch");
-        const selectElement = screen.getByTestId("select-trigger");
+        const pickerElement = screen.getByTestId("frequency-picker");
 
         expect(switchElement).toBeDisabled();
-        expect(selectElement).toBeDisabled();
+        expect(pickerElement).toBeDisabled();
     });
 
     it("should disable frequency select when automatic backups are disabled", () => {
@@ -211,8 +219,8 @@ describe("SchedulingCard", () => {
 
         render(<SchedulingCard isLocked={false} />);
 
-        const selectElement = screen.getByTestId("select-trigger");
-        expect(selectElement).toBeDisabled();
+        const pickerElement = screen.getByTestId("frequency-picker");
+        expect(pickerElement).toBeDisabled();
     });
 
     it("should render all frequency options", () => {

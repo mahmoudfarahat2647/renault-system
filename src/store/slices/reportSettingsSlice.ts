@@ -6,7 +6,7 @@ import type { CombinedStore } from "../types";
 export interface ReportSettings {
     id: string;
     emails: string[];
-    frequency: "Weekly" | "Monthly" | "Yearly";
+    frequency: string; // "Daily", "Weekly-0" (Sun) to "Weekly-6" (Sat), "Monthly", "Yearly"
     is_enabled: boolean;
     last_sent_at: string | null;
 }

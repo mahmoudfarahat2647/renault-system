@@ -12,6 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useAppStore } from "@/store/useStore";
+import FrequencyPicker from "./FrequencyPicker";
 
 interface SchedulingCardProps {
     isLocked: boolean;
@@ -57,22 +58,13 @@ export function SchedulingCard({ isLocked }: SchedulingCardProps) {
 
                 <div className="space-y-2">
                     <Label htmlFor="frequency">Frequency</Label>
-                    <Select
-                        value={reportSettings?.frequency}
-                        onValueChange={(value: "Weekly" | "Monthly" | "Yearly") =>
+                    <FrequencyPicker
+                        value={reportSettings?.frequency || "Weekly"}
+                        onChange={(value) =>
                             updateReportSettings({ frequency: value })
                         }
                         disabled={isLoading || !reportSettings?.is_enabled || isLocked}
-                    >
-                        <SelectTrigger id="frequency">
-                            <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Weekly">Weekly</SelectItem>
-                            <SelectItem value="Monthly">Monthly</SelectItem>
-                            <SelectItem value="Yearly">Yearly</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    />
                 </div>
             </CardContent>
         </Card>
