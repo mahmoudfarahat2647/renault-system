@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { exportWorkbookCSV } from "@/lib/exportUtils";
+import { toast } from "sonner";
+import { exportAllSystemDataCSV, exportWorkbookCSV } from "@/lib/exportUtils";
 import { cn } from "@/lib/utils";
+import { orderService } from "@/services/orderService";
 import { useAppStore } from "@/store/useStore";
 import type { AppNotification } from "@/types";
 import { CloudSync } from "./CloudSync";
@@ -198,21 +200,17 @@ export const Header = React.memo(function Header() {
 					<button
 						type="button"
 						suppressHydrationWarning
-						onClick={() => {
-							const {
-								ordersRowData,
-								rowData,
-								bookingRowData,
-								callRowData,
-								archiveRowData,
-							} = useAppStore.getState();
-							exportWorkbookCSV({
-								orders: ordersRowData,
-								mainSheet: rowData,
-								booking: bookingRowData,
-								callList: callRowData,
-								archive: archiveRowData,
-							});
+						onClick={async () => {
+							const toastId = toast.loading("Preparing full system export...");
+							try {
+								const rawData = await orderService.getOrders();
+								const mappedData = rawData.map(orderService.mapSupabaseOrder);
+								exportAllSystemDataCSV(mappedData);
+								toast.success("Workbook exported successfully", { id: toastId });
+							} catch (error) {
+								console.error("Export failed:", error);
+								toast.error("Failed to export workbook", { id: toastId });
+							}
 						}}
 						className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
 						title="Extract All (Workbook)"

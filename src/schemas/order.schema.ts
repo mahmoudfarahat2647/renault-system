@@ -75,6 +75,7 @@ export const PendingRowSchema = z.object({
     archiveReason: z.string().optional(),
     archivedAt: z.string().optional(),
     sourceType: z.string().optional(),
+    stage: z.string().optional(),
 }).transform((data) => {
     // AUTO-SYNC: Legacy fields always reflect parts[0] if available
     // This ensures that partNumber/description are never stale compared to the parts array

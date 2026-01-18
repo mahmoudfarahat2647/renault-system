@@ -257,6 +257,7 @@ export const orderService = {
 			vin: row.vin,
 			company: row.company,
 			reminder: reminder,
+			stage: row.stage,
 			// stage logic is handled by the tab we are in
 		};
 

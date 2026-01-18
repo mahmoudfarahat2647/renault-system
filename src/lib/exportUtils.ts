@@ -74,13 +74,19 @@ export const exportWorkbookCSV = (stores: {
 }) => {
 	const timestamp = new Date().toISOString().split("T")[0];
 
-	// Add "Source" column to identify where data came from
+	// Create helper to format reminder
+	const formatReminder = (reminder: PendingRow["reminder"]) => {
+		if (!reminder) return "";
+		return `[${reminder.date} ${reminder.time}] ${reminder.subject}`;
+	};
+
+	// Add "Source" column and format complex fields
 	const allData = [
-		...stores.orders.map((r) => ({ ...r, source: "Orders" })),
-		...stores.mainSheet.map((r) => ({ ...r, source: "Main Sheet" })),
-		...stores.booking.map((r) => ({ ...r, source: "Booking" })),
-		...stores.callList.map((r) => ({ ...r, source: "Call List" })),
-		...stores.archive.map((r) => ({ ...r, source: "Archive" })),
+		...stores.orders.map((r) => ({ ...r, source: "Orders", reminderText: formatReminder(r.reminder) })),
+		...stores.mainSheet.map((r) => ({ ...r, source: "Main Sheet", reminderText: formatReminder(r.reminder) })),
+		...stores.booking.map((r) => ({ ...r, source: "Booking", reminderText: formatReminder(r.reminder) })),
+		...stores.callList.map((r) => ({ ...r, source: "Call List", reminderText: formatReminder(r.reminder) })),
+		...stores.archive.map((r) => ({ ...r, source: "Archive", reminderText: formatReminder(r.reminder) })),
 	];
 
 	if (allData.length === 0) return;
@@ -93,15 +99,86 @@ export const exportWorkbookCSV = (stores: {
 		"customerName",
 		"mobile",
 		"model",
+		"cntrRdg",
 		"partNumber",
 		"description",
 		"status",
 		"rDate",
 		"requester",
+		"acceptedBy",
+		"sabNumber",
+		"repairSystem",
+		"startWarranty",
+		"endWarranty",
+		"remainTime",
 		"bookingDate",
 		"bookingStatus",
 		"partStatus",
+		"noteContent",
+		"actionNote",
+		"bookingNote",
+		"reminderText",
+		"archiveReason",
+		"archivedAt",
 	];
 
 	exportToCSV(allData, `renault_system_workbook_${timestamp}`, headers);
+};
+
+/**
+ * Enhanced export that fetches all data and exports to CSV.
+ */
+export const exportAllSystemDataCSV = (allRows: PendingRow[]) => {
+	const timestamp = new Date().toISOString().split("T")[0];
+
+	const stageMap: Record<string, string> = {
+		orders: "Orders",
+		main: "Main Sheet",
+		booking: "Booking",
+		call: "Call List",
+		archive: "Archive",
+	};
+
+	const formatReminder = (reminder: PendingRow["reminder"]) => {
+		if (!reminder) return "";
+		return `[${reminder.date} ${reminder.time}] ${reminder.subject}`;
+	};
+
+	const allData = allRows.map((r) => ({
+		...r,
+		source: stageMap[r.stage as string] || r.stage || "Unknown",
+		reminderText: formatReminder(r.reminder),
+	}));
+
+	const headers = [
+		"source",
+		"trackingId",
+		"vin",
+		"customerName",
+		"mobile",
+		"model",
+		"cntrRdg",
+		"partNumber",
+		"description",
+		"status",
+		"rDate",
+		"requester",
+		"acceptedBy",
+		"sabNumber",
+		"repairSystem",
+		"startWarranty",
+		"endWarranty",
+		"remainTime",
+		"bookingDate",
+		"bookingStatus",
+		"partStatus",
+		"noteContent",
+		"actionNote",
+		"bookingNote",
+		"reminderText",
+		"archiveReason",
+		"archivedAt",
+	];
+
+	exportToCSV(allData, `renault_system_all_data_${timestamp}`, headers);
 };
