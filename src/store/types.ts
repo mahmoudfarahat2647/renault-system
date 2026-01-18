@@ -162,7 +162,7 @@ export type CombinedStore = StoreState & StoreActions;
 export interface ReportSettings {
 	id: string;
 	emails: string[];
-	frequency: "Weekly" | "Monthly" | "Yearly";
+	frequency: string;
 	is_enabled: boolean;
 	last_sent_at: string | null;
 }
