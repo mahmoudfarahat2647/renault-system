@@ -75,8 +75,14 @@ export const OrdersToolbar = ({
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
 	return (
-		<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
-			<div className="flex items-center gap-1.5">
+		<div
+			className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5"
+			suppressHydrationWarning={true}
+		>
+			<div
+				className="flex items-center gap-1.5"
+				suppressHydrationWarning={true}
+			>
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -103,7 +109,10 @@ export const OrdersToolbar = ({
 					</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
+				<div
+					className="w-px h-5 bg-white/10 mx-1"
+					suppressHydrationWarning={true}
+				/>
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -247,7 +256,10 @@ export const OrdersToolbar = ({
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
 
-				<div className="w-px h-5 bg-white/10 mx-1" />
+				<div
+					className="w-px h-5 bg-white/10 mx-1"
+					suppressHydrationWarning={true}
+				/>
 
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -309,7 +321,10 @@ export const OrdersToolbar = ({
 				</Tooltip>
 			</div>
 
-			<div className="flex items-center gap-1.5">
+			<div
+				className="flex items-center gap-1.5"
+				suppressHydrationWarning={true}
+			>
 				<VINLineCounter rows={rowData} />
 
 				<Tooltip>

@@ -52,10 +52,10 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 				<div className="absolute top-0 right-0 w-96 h-96 bg-renault-yellow/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 				<div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-6 relative z-10 font-[family-name:var(--font-geist-sans)]">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-y-2 gap-x-6 relative z-10 font-[family-name:var(--font-geist-sans)]" suppressHydrationWarning>
 					{/* Column 1: Customer & VIN */}
-					<div className="space-y-1">
-						<div className="flex items-baseline gap-2">
+					<div className="space-y-1" suppressHydrationWarning>
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								name :
 							</span>
@@ -63,7 +63,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{customerName}
 							</span>
 						</div>
-						<div className="flex items-baseline gap-2">
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								vin :
 							</span>
@@ -71,7 +71,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{vin}
 							</span>
 						</div>
-						<div className="flex items-baseline gap-2">
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								model :
 							</span>
@@ -79,7 +79,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{model}
 							</span>
 						</div>
-						<div className="flex items-baseline gap-2">
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-16 shrink-0">
 								mobile :
 							</span>
@@ -90,8 +90,8 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 					</div>
 
 					{/* Column 2: Part Details */}
-					<div className="space-y-1">
-						<div className="flex items-baseline gap-2">
+					<div className="space-y-1" suppressHydrationWarning>
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 								part des. :
 							</span>
@@ -99,7 +99,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{description}
 							</span>
 						</div>
-						<div className="flex items-baseline gap-2">
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-20 shrink-0">
 								part no. :
 							</span>
@@ -107,7 +107,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{partNumber}
 							</span>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								order stats :
 							</span>
@@ -126,9 +126,9 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 					</div>
 
 					{/* Column 3: Warranty & Part State */}
-					<div className="space-y-1">
+					<div className="space-y-1" suppressHydrationWarning>
 						{repairSystem !== "ضمان" && (
-							<div className="flex items-baseline gap-2">
+							<div className="flex items-baseline gap-2" suppressHydrationWarning>
 								<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 									warranty :
 								</span>
@@ -139,7 +139,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								</span>
 							</div>
 						)}
-						<div className="flex items-baseline gap-2">
+						<div className="flex items-baseline gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								system :
 							</span>
@@ -147,7 +147,7 @@ export const InfoLabel = React.memo(({ data }: InfoLabelProps) => {
 								{repairSystem}
 							</span>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2" suppressHydrationWarning>
 							<span className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold w-24 shrink-0">
 								part state :
 							</span>
