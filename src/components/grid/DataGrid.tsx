@@ -74,6 +74,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		return state || undefined;
 	}, [gridStateKey, getGridState]);
 
+	const setLayoutDirty = useAppStore((state) => state.setLayoutDirty);
+
 	const handleSaveState = useCallback(() => {
 		if (gridStateKey && gridApiRef.current) {
 			const api = gridApiRef.current;
@@ -90,6 +92,13 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 			}, 500);
 		}
 	}, [gridStateKey, saveGridState, gridApiRef]);
+
+	const handleLayoutChange = useCallback(() => {
+		if (gridStateKey) {
+			setLayoutDirty(gridStateKey, true);
+		}
+		handleSaveState();
+	}, [gridStateKey, setLayoutDirty, handleSaveState]);
 
 	// [CRITICAL] PERSISTENCE RESTORATION
 	// Restore saved state when grid is ready
@@ -224,10 +233,10 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 				onCellValueChanged={handleCellValueChanged}
 				onSelectionChanged={handleSelectionChanged}
 				// State Change tracking for persistence
-				onColumnMoved={handleSaveState}
-				onColumnResized={handleSaveState}
-				onColumnVisible={handleSaveState}
-				onColumnPinned={handleSaveState}
+				onColumnMoved={handleLayoutChange}
+				onColumnResized={handleLayoutChange}
+				onColumnVisible={handleLayoutChange}
+				onColumnPinned={handleLayoutChange}
 				onSortChanged={handleSaveState}
 				onFilterChanged={handleSaveState}
 				onColumnGroupOpened={handleSaveState}

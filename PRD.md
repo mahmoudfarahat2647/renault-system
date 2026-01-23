@@ -1,12 +1,12 @@
-# pendingsystem - Product Requirements Document (PRD)
+# Renault Pending System - Product Requirements Document (PRD)
 
 ## 1. Executive Summary
 
 ### 1.1 Product Overview
-The pendingsystem is a Next.js-based logistics management platform designed for automotive service centers. It provides real-time inventory tracking, customer booking management, and comprehensive order workflows. The system streamlines the entire lifecycle of automotive parts from order placement to customer delivery.
+The **Renault Pending System** is a Next.js-based logistics management platform specifically designed for **Renault automotive service centers**. It provides real-time inventory tracking, customer booking management, and comprehensive order workflows with a premium dark-themed interface featuring Renault brand colors. The system streamlines the entire lifecycle of automotive parts from order placement to customer delivery with **optimistic UI updates** and **sub-100ms perceived latency**.
 
 ### 1.2 Product Vision
-To create an efficient, intuitive logistics platform that reduces operational overhead for automotive service centers by automating routine tasks, providing real-time visibility into inventory status, and facilitating seamless customer communication.
+To create an efficient, intuitive logistics platform that reduces operational overhead for **Renault service centers** by automating routine tasks, providing real-time visibility into inventory status, and facilitating seamless customer communication through a **premium dark-themed interface** with **Renault Yellow (#FFCC00)** accent colors.
 
 ### 1.3 Success Metrics
 - Reduce manual data entry by 75%
@@ -105,18 +105,25 @@ To create an efficient, intuitive logistics platform that reduces operational ov
 ## 5. Technical Requirements
 
 ### 5.1 Platform Requirements
-- **Frontend Framework**: Next.js 15 with React 19
-- **Styling**: Tailwind CSS with Radix UI components
-- **State Management**: Zustand with localStorage persistence
-- **Data Grid**: ag-Grid Community v32.3.3
-- **Charts**: Recharts for visualization
-- **Testing**: Vitest for unit tests, Playwright for E2E tests
+- **Frontend Framework**: Next.js 15.5.9 with React 19.0.0
+- **Styling**: Tailwind CSS 3.4.17 with Radix UI components (@ark-ui/react, @radix-ui/*)
+- **State Management**: Zustand 5.0.2 with localStorage persistence (key: "pending-sys-storage-v1.1")
+- **Data Grid**: ag-Grid Community v32.3.3 with React wrapper
+- **Charts**: Recharts 2.15.0 for data visualization
+- **Icons**: Lucide React 0.468.0 and HugeIcons 1.1.4
+- **Animations**: Framer Motion 12.23.26 for smooth transitions
+- **Database**: Supabase 2.89.0 for data persistence
+- **Server State**: TanStack Query 5.90.16 for optimistic updates
+- **Testing**: Vitest 4.0.16 for unit tests, Playwright 1.57.0 for E2E tests
+- **Notifications**: Sonner 1.7.1 for toast notifications
 
 ### 5.2 Performance Requirements
 - **Response Time**: Sub-100ms perceived latency for all UI interactions
-- **Optimistic UI**: Instant reactivity with 0ms perceived latency for data updates
-- **Grid Performance**: Support for thousands of rows with virtualization
-- **Memory Management**: Selective persistence to reduce localStorage overhead
+- **Optimistic UI**: Instant reactivity with 0ms perceived latency for data updates using TanStack Query
+- **Grid Performance**: Support for thousands of rows with ag-Grid virtualization
+- **Memory Management**: Selective persistence to reduce localStorage overhead (partialize strategy)
+- **Set-based Lookups**: O(1) performance for data operations using Set instead of array filtering
+- **Index-based Updates**: Direct array modification for optimal performance
 
 ### 5.3 Security Requirements
 - **Client-Side Only**: No backend API, file-based operations
@@ -132,10 +139,13 @@ To create an efficient, intuitive logistics platform that reduces operational ov
 ## 6. User Experience Requirements
 
 ### 6.1 UI/UX Standards
-- **Design System**: Dark mode default with system Yellow accents
+- **Design System**: Dark mode default with **Renault Yellow (#FFCC00)** accents
+- **Typography**: Inter font with optimized loading
 - **Animations**: Framer Motion for smooth transitions and modal interactions
-- **Icons**: Lucide React icons for consistent visual language
+- **Icons**: Lucide React and HugeIcons for consistent visual language
 - **Accessibility**: Tooltips for icon-only buttons, keyboard navigation support
+- **Components**: Radix UI primitives with custom theming
+- **Error Handling**: ClientErrorBoundary with graceful fallbacks
 
 ### 6.2 User Interaction Patterns
 - **Consistency**: Standardized UI across all modules
@@ -183,10 +193,14 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 ## 8. Integration Requirements
 
 ### 8.1 Current Integrations
-- **Supabase**: Database integration for data persistence
-- **AG-Grid**: Advanced data grid functionality
-- **Recharts**: Data visualization capabilities
-- **TanStack Query**: Server state management
+- **Supabase**: Database integration for data persistence and real-time updates
+- **AG-Grid**: Advanced data grid with reactive custom components and optimized cell renderers
+- **Recharts**: Data visualization for dashboard charts (CapacityChart, DistributionChart)
+- **TanStack Query**: Server state management with optimistic updates and cache management
+- **Framer Motion**: Animation library for smooth UI transitions
+- **Sonner**: Toast notification system for user feedback
+- **React Day Picker**: Date selection for booking system
+- **Zod**: Schema validation for type safety
 
 ### 8.2 Future Integration Plans
 - **Backend API**: For cloud synchronization (planned)
@@ -203,7 +217,7 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 ### 9.2 Business Constraints
 - Automotive service center focused (not general-purpose)
 - 48-hour history retention requirement
-- pendingsystem-specific branding and workflow requirements
+- Renault Pending System-specific branding and workflow requirements
 
 ## 10. Risk Assessment
 
@@ -268,23 +282,173 @@ Orders (Staging) → Main Sheet (Pending) → Main Sheet (Arrived) → Call List
 - Third-party library compatibility
 - Hardware requirements met by target users
 
-## 14. Appendices
+## 14. Implementation Status & Features
+
+### 14.1 Currently Implemented Features
+
+#### Dashboard (`/`)
+- **Hero Section**: Renault-branded dashboard with background image
+- **Real-time Stats**: Total Pending, Active Orders, Call Queue with live data
+- **Interactive Charts**: Capacity pie chart and Distribution bar chart with lazy loading
+- **Calendar Widget**: Glass-morphism calendar with current month view
+
+#### Orders Management (`/orders`)
+- **OrderFormModal**: Comprehensive order creation with 44KB of functionality
+- **OrdersToolbar**: Bulk operations and filtering capabilities
+- **Import/Export**: Bulk order import from external sources
+- **Attachment Support**: Document and note attachments
+- **Tracking IDs**: Auto-generated ORDER-{baseId} format
+
+#### Main Sheet (`/main-sheet`)
+- **Dynamic Data Grid**: ag-Grid with custom cell renderers
+- **Status Management**: Definition-driven status system with visual indicators
+- **Auto-move Workflow**: Automatic transition when all parts arrive
+- **Bulk Operations**: Multi-select with status updates
+- **Locking Mechanism**: Prevent accidental edits
+
+#### Booking System (`/booking`)
+- **BookingCalendarGrid**: Premium dark-themed calendar interface
+- **BookingSidebar**: Multi-VIN customer grouping with detailed views
+- **Visual Indicators**: Color-coded booking status dots
+- **2-year Retention**: Historical booking data management
+- **Pre-booking Notes**: Configuration for appointment details
+
+#### Call List (`/call-list`)
+- **Customer Queue**: Organized contact management
+- **Call Status Tracking**: Communication logging
+- **Auto-move Integration**: Seamless transition from Main Sheet
+- **Note Attachments**: Customer interaction documentation
+
+#### Archive (`/archive`)
+- **48-hour Retention**: Historical record management
+- **Immutable Records**: Audit trail compliance
+- **Archive Reasons**: Documentation for compliance
+- **Reorder Capability**: Quick reordering from archived items
+
+#### Search & Discovery
+- **Cross-tab Search**: Global search across VIN, Customer Name, Part Number, Company
+- **SearchResultsView**: Advanced filtering and navigation
+- **Direct Navigation**: Click-to-navigate to source rows
+
+#### Settings & Configuration
+- **Part Status Management**: Centralized status definition with color customization
+- **Appearance Settings**: Theme and visual preferences
+- **History Management**: 48-hour restoration capability
+- **Auto-cleaning**: Performance optimization for old history
+
+### 14.2 Technical Implementation Details
+
+#### State Management Architecture
+```typescript
+// Zustand store with selective persistence
+export const useAppStore = create<CombinedStore>()(
+  persist(
+    (...a) => ({
+      ...createOrdersSlice(...a),
+      ...createInventorySlice(...a),
+      ...createBookingSlice(...a),
+      ...createNotificationSlice(...a),
+      ...createUISlice(...a),
+      ...createHistorySlice(...a),
+    }),
+    {
+      name: "pending-sys-storage-v1.1",
+      partialize: (state) => {
+        // Selective persistence strategy
+      }
+    }
+  )
+);
+```
+
+#### Optimistic UI Pattern
+```typescript
+// TanStack Query with optimistic updates
+onMutate: async ({ id, updates, stage }) => {
+  await queryClient.cancelQueries({ queryKey: ["orders", stage] });
+  const previousOrders = queryClient.getQueryData(["orders", stage]);
+  queryClient.setQueryData(["orders", stage], (old) => 
+    old?.map(order => order.id === id ? { ...order, ...updates } : order)
+  );
+  return { previousOrders };
+}
+```
+
+#### Performance Optimizations
+- **Set-based O(1) Lookups**: Replace array filtering with Set operations
+- **Index-based Updates**: Direct array modification for bulk operations
+- **Memoized Components**: React.memo and useMemo for render optimization
+- **Lazy Loading**: Dynamic imports for charts and heavy components
+- **Debounced Operations**: 300ms debouncing for status updates
+
+## 15. Testing Strategy
+
+### 15.1 Unit Testing (Vitest)
+- Component testing with Testing Library
+- Store action testing with mock data
+- Utility function validation
+- Performance benchmarking
+
+### 15.2 E2E Testing (Playwright)
+- Full workflow testing from Orders to Archive
+- Cross-browser compatibility validation
+- Performance testing with large datasets
+- Accessibility compliance testing
+
+### 15.3 TestSprite Integration
+- Automated test generation and execution
+- Code summary and PRD synchronization
+- Regression testing for critical workflows
+
+## 16. Deployment & Operations
+
+### 16.1 Build Process
+```json
+{
+  "scripts": {
+    "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check ."
+  }
+}
+```
+
+### 16.2 Quality Assurance
+- **Biome**: Code formatting and linting
+- **Husky**: Git hooks for commit validation
+- **TypeScript**: Full type coverage with strict mode
+- **Documentation**: Auto-generated JSDoc extraction
+
+## 17. Appendices
 
 ### Appendix A: Glossary
 - **VIN**: Vehicle Identification Number
-- **Part Status**: Lifecycle status of automotive parts (Pending, Arrived, Available, etc.)
-- **Tracking ID**: System-generated unique identifier for each order
-- **Auto-move**: Automated transition of parts between stages when conditions are met
+- **Part Status**: Lifecycle status (Pending, Arrived, Available, Reserved, etc.)
+- **Tracking ID**: System-generated unique identifier (ORDER-{baseId})
+- **Auto-move**: Automated transition between stages when conditions are met
+- **Optimistic UI**: Instant UI updates with rollback on error
+- **Set-based Lookup**: O(1) performance using JavaScript Set objects
 
-### Appendix B: Architecture Diagram
-The system follows a modular architecture with:
-- Next.js pages for routing
-- Zustand for state management
-- ag-Grid for data presentation
-- TypeScript for type safety
-- Tailwind CSS for styling
+### Appendix B: Architecture Overview
+```
+Frontend: Next.js 15 + React 19 + TypeScript
+├── State: Zustand (localStorage) + TanStack Query (server)
+├── UI: Tailwind CSS + Radix UI + Framer Motion
+├── Data: Supabase + ag-Grid + Recharts
+├── Testing: Vitest + Playwright + TestSprite
+└── Tools: Biome + Husky + TypeScript
+```
 
 ### Appendix C: User Stories
-- As a service advisor, I want to track pending parts from order to delivery so I can provide accurate timelines to customers
-- As a scheduler, I want to see all upcoming appointments in a calendar view so I can optimize resource allocation
-- As a manager, I want to see historical data so I can analyze trends and improve processes
+- As a **service advisor**, I want to track pending parts from order to delivery so I can provide accurate timelines to customers
+- As a **scheduler**, I want to see all upcoming appointments in a premium calendar view so I can optimize resource allocation
+- As a **manager**, I want real-time dashboard analytics so I can monitor operational efficiency
+- As a **technician**, I want instant status updates so I can plan my work effectively
+- As a **customer service representative**, I want comprehensive call management so I can maintain excellent customer communication
+
+---
+
+**Document Version**: 2.0 - Aligned with Current Implementation  
+**Last Updated**: January 23, 2026  
+**System**: Renault Pending System v0.1.0

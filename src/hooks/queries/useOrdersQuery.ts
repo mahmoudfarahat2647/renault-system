@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type OrderStage, orderService } from "@/services/orderService";
+import { useAppStore } from "@/store/useStore";
 
 export function useOrdersQuery(stage?: OrderStage) {
 	return useQuery({
@@ -77,6 +78,9 @@ export function useBulkUpdateOrderStageMutation() {
 			// Invalidate everything to be safe
 			queryClient.invalidateQueries({ queryKey: ["orders"] });
 		},
+		onSuccess: (_, variables) => {
+			useAppStore.getState().addCommit(`Bulk update orders to stage: ${variables.stage}`);
+		},
 	});
 }
 
@@ -120,37 +124,29 @@ export function useSaveOrderMutation() {
 
 			return { previousOrders };
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: Error handling
-		onSuccess: (data, variables) => {
-			if (data) {
-				const mappedOrder = orderService.mapSupabaseOrder(data);
-				queryClient.setQueryData<any[]>(
-					["orders", variables.stage],
-					(old) => {
-						if (!old) return [];
-						return old.map((order) =>
-							order.id === mappedOrder.id ? mappedOrder : order,
-						);
-					},
-				);
-			}
-		},
-		onError: (error: any, variables, context) => {
+		onError: (
+			// biome-ignore lint/suspicious/noExplicitAny: Error object
+			error: any,
+			variables: { stage: OrderStage; id: string; updates: any },
+			// biome-ignore lint/suspicious/noExplicitAny: Context data
+			context?: { previousOrders?: any[] },
+		) => {
 			if (context?.previousOrders) {
-				queryClient.setQueryData(
-					["orders", variables.stage],
-					context.previousOrders,
-				);
+				queryClient.setQueryData(["orders", variables.stage], context.previousOrders);
 			}
-			const errorMessage =
-				error?.message || error?.hint || error?.details || String(error);
+			const errorMessage = error?.message || error?.hint || error?.details || String(error);
 			toast.error(`Error saving order: ${errorMessage}`);
 		},
-		onSettled: (_data, _error, { stage }) => {
+		onSettled: (_data, _error, variables) => {
 			// [CRITICAL] CONSISTENCY INVALIDATION
-			// Refetch only AFTER the UI has been updated via onMutate/onSuccess. 
+			// Refetch only AFTER the UI has been updated via onMutate/onSuccess.
 			// Do NOT add delays here; the reactivity is handled by manual cache updates.
-			queryClient.invalidateQueries({ queryKey: ["orders", stage] });
+			queryClient.invalidateQueries({ queryKey: ["orders", variables.stage] });
+		},
+		onSuccess: (_, variables) => {
+			const action = variables.id ? "Update Order" : "Create Order";
+			const trackingId = variables.updates?.trackingId || variables.id || "New";
+			useAppStore.getState().addCommit(`${action}: ${trackingId}`);
 		},
 	});
 }
@@ -160,9 +156,10 @@ export function useDeleteOrderMutation() {
 
 	return useMutation({
 		mutationFn: (id: string) => orderService.deleteOrder(id),
-		onSuccess: () => {
+		onSuccess: (_, id) => {
 			queryClient.invalidateQueries({ queryKey: ["orders"] });
 			toast.success("Order deleted");
+			useAppStore.getState().addCommit(`Delete Order: ${id}`);
 		},
 	});
 }

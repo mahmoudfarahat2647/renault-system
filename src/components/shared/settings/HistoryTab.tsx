@@ -1,13 +1,25 @@
 "use client";
 
-import { History, Undo2 } from "lucide-react";
+import { History, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { CommitLog } from "@/types";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 export const HistoryTab = () => {
 	const commits = useAppStore((state) => state.commits);
+	const isRestoring = useAppStore((state) => state.isRestoring);
+	const [openDialogId, setOpenDialogId] = useState<string | null>(null);
 
 	return (
 		<div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -77,17 +89,77 @@ export const HistoryTab = () => {
 										</div>
 
 										{!isLatest && (
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={() =>
-													useAppStore.getState().restoreToCommit(commit.id)
+											<Dialog
+												open={openDialogId === commit.id}
+												onOpenChange={(open) =>
+													setOpenDialogId(open ? commit.id : null)
 												}
-												className="h-8 rounded-xl border-white/10 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-400/30 transition-all"
 											>
-												<Undo2 className="h-3.5 w-3.5 mr-2" />
-												Restore
-											</Button>
+												<DialogTrigger asChild>
+													<Button
+														variant="outline"
+														size="sm"
+														disabled={isRestoring}
+														className="h-8 rounded-xl border-white/10 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-400/30 transition-all"
+													>
+														{isRestoring && openDialogId === commit.id ? (
+															<Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+														) : (
+															<RotateCcw className="h-3.5 w-3.5 mr-2" />
+														)}
+														Rollback
+													</Button>
+												</DialogTrigger>
+												<DialogContent className="bg-[#1c1c1e] border-white/10 text-gray-200">
+													<DialogHeader>
+														<DialogTitle className="text-xl font-bold">
+															Confirm System Rollback
+														</DialogTitle>
+														<DialogDescription className="text-gray-400 py-4">
+															You are about to restore the entire system to its
+															state at{" "}
+															<span className="text-emerald-400 font-semibold">
+																{timeString} on {dateString}
+															</span>
+															. This will overwrite all current data in the
+															database with the version from this save point.
+															<br />
+															<br />
+															<span className="text-amber-400 font-medium">
+																This action is irreversible.
+															</span>
+														</DialogDescription>
+													</DialogHeader>
+													<DialogFooter className="gap-3 sm:gap-0">
+														<Button
+															variant="ghost"
+															onClick={() => setOpenDialogId(null)}
+															className="text-gray-400 hover:text-white hover:bg-white/5 rounded-xl"
+														>
+															Cancel
+														</Button>
+														<Button
+															onClick={async () => {
+																await useAppStore
+																	.getState()
+																	.restoreToCommit(commit.id);
+																setOpenDialogId(null);
+															}}
+															disabled={isRestoring}
+															className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20"
+														>
+															{isRestoring ? (
+																<>
+																	<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+																	Restoring...
+																</>
+															) : (
+																"Perform Rollback"
+															)}
+														</Button>
+													</DialogFooter>
+												</DialogContent>
+											</Dialog>
 										)}
 									</div>
 								</div>

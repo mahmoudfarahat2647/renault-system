@@ -2,6 +2,8 @@ import type { StateCreator } from "zustand";
 import { generateId } from "@/lib/utils";
 import type { CommitLog } from "@/types";
 import type { CombinedStore, HistoryActions, HistoryState } from "../types";
+import { restoreService } from "@/services/restoreService";
+import { toast } from "sonner";
 
 let commitTimer: NodeJS.Timeout | null = null;
 
@@ -14,6 +16,9 @@ export const createHistorySlice: StateCreator<
 	commits: [],
 	undoStack: [],
 	redos: [],
+	isRestoring: false,
+
+	setIsRestoring: (val: boolean) => set({ isRestoring: val }),
 
 	addCommit: (actionName) => {
 		if (commitTimer) {
@@ -63,18 +68,34 @@ export const createHistorySlice: StateCreator<
 		}, 1000);
 	},
 
-	restoreToCommit: (commitId) => {
+	restoreToCommit: async (commitId) => {
 		const state = get();
 		const targetCommit = state.commits.find((c) => c.id === commitId);
 
 		if (targetCommit) {
-			set({
-				...targetCommit.snapshot,
-				redos: [],
-				undoStack: [...state.undoStack, targetCommit], // Add search jump to undo stack
-			});
-			// Add a restoration record to history
-			get().addCommit(`Restored to: ${targetCommit.actionName}`);
+			try {
+				set({ isRestoring: true });
+
+				// 1. Sync to Supabase
+				await restoreService.restoreSnapshot(targetCommit.snapshot);
+
+				// 2. Update Local State
+				set({
+					...targetCommit.snapshot,
+					redos: [],
+					undoStack: [...state.undoStack, targetCommit],
+					isRestoring: false,
+				});
+
+				// 3. Record the restoration in history
+				get().addCommit(`Restored to: ${targetCommit.actionName}`);
+
+				toast.success(`System restored to: ${targetCommit.actionName}`);
+			} catch (error) {
+				console.error("Restoration failed:", error);
+				set({ isRestoring: false });
+				toast.error("Restoration failed. Please check your connection.");
+			}
 		}
 	},
 

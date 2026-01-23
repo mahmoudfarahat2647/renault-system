@@ -281,10 +281,10 @@ export const Sidebar = React.memo(function Sidebar() {
 					</div>
 					{!isCollapsed && (
 						<div className="flex-1 min-w-0">
-							<p className="text-sm font-semibold text-white truncate">
+							<p className="text-sm font-semibold text-white truncate" suppressHydrationWarning>
 								Mahmoud Farahat
 							</p>
-							<p className="text-xs text-gray-500 truncate">System Creator</p>
+							<p className="text-xs text-gray-500 truncate" suppressHydrationWarning>System Creator</p>
 						</div>
 					)}
 				</button>

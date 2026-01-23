@@ -119,11 +119,13 @@ export interface HistoryState {
 	commits: CommitLog[];
 	undoStack: CommitLog[];
 	redos: CommitLog[];
+	isRestoring: boolean;
 }
 
 export interface HistoryActions {
 	addCommit: (actionName: string) => void;
-	restoreToCommit: (commitId: string) => void;
+	restoreToCommit: (commitId: string) => Promise<void>;
+	setIsRestoring: (val: boolean) => void;
 	undo: () => void;
 	redo: () => void;
 	clearHistory: () => void;
@@ -133,12 +135,14 @@ export interface HistoryActions {
 
 export interface GridSliceState {
 	gridStates: Record<string, GridState>;
+	dirtyLayouts: Record<string, boolean>;
 }
 
 export interface GridSliceActions {
 	saveGridState: (gridKey: string, state: GridState) => void;
 	getGridState: (gridKey: string) => GridState | null;
 	clearGridState: (gridKey: string) => void;
+	setLayoutDirty: (gridKey: string, dirty: boolean) => void;
 }
 
 export type StoreState = OrdersState &

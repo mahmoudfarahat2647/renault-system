@@ -21,6 +21,8 @@ import { getBookingColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
+import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -57,6 +59,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function BookingPage() {
+	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("booking");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
@@ -228,6 +231,12 @@ export default function BookingPage() {
 							</TooltipTrigger>
 							<TooltipContent>Filter</TooltipContent>
 						</Tooltip>
+
+						<LayoutSaveButton
+							isDirty={isDirty}
+							onSave={saveLayout}
+							onReset={resetLayout}
+						/>
 
 						<Tooltip>
 							<TooltipTrigger asChild>

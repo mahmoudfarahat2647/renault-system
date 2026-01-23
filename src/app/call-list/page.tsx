@@ -18,6 +18,8 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getBaseColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
 import { RowModals } from "@/components/shared/RowModals";
+import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -54,6 +56,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function CallListPage() {
+	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("call-list");
 	const { data: callRowData = [] } = useOrdersQuery("call");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
@@ -221,6 +224,12 @@ export default function CallListPage() {
 							</TooltipTrigger>
 							<TooltipContent>Filter</TooltipContent>
 						</Tooltip>
+
+						<LayoutSaveButton
+							isDirty={isDirty}
+							onSave={saveLayout}
+							onReset={resetLayout}
+						/>
 
 						<Tooltip>
 							<TooltipTrigger asChild>

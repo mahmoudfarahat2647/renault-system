@@ -9,6 +9,11 @@ export interface GridSlice {
     gridStates: Record<string, GridState>;
 
     /**
+     * Track which layouts have unsaved changes.
+     */
+    dirtyLayouts: Record<string, boolean>;
+
+    /**
      * Saves the state of a specific grid.
      * @param gridKey Unique identifier for the grid.
      * @param state The current state object from AG Grid api.getState().
@@ -27,6 +32,11 @@ export interface GridSlice {
      * @param gridKey Unique identifier for the grid.
      */
     clearGridState: (gridKey: string) => void;
+
+    /**
+     * Marks a layout as dirty or clean.
+     */
+    setLayoutDirty: (gridKey: string, dirty: boolean) => void;
 }
 
 export const createGridSlice: StateCreator<
@@ -36,6 +46,7 @@ export const createGridSlice: StateCreator<
     GridSlice
 > = (set, get) => ({
     gridStates: {},
+    dirtyLayouts: {},
 
     saveGridState: (gridKey, state) => {
         set((prev) => ({
@@ -54,7 +65,21 @@ export const createGridSlice: StateCreator<
         set((prev) => {
             const newStates = { ...prev.gridStates };
             delete newStates[gridKey];
-            return { gridStates: newStates };
+            const newDirty = { ...prev.dirtyLayouts };
+            delete newDirty[gridKey];
+            return {
+                gridStates: newStates,
+                dirtyLayouts: newDirty
+            };
         });
+    },
+
+    setLayoutDirty: (gridKey, dirty) => {
+        set((prev) => ({
+            dirtyLayouts: {
+                ...prev.dirtyLayouts,
+                [gridKey]: dirty,
+            },
+        }));
     },
 });

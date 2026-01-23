@@ -17,6 +17,8 @@ import {
 	Trash2,
 } from "lucide-react";
 import { VINLineCounter } from "@/components/shared/VINLineCounter";
+import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -71,6 +73,7 @@ export const OrdersToolbar = ({
 	onCallList,
 	rowData = [],
 }: OrdersToolbarProps) => {
+	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
@@ -255,6 +258,12 @@ export const OrdersToolbar = ({
 					</TooltipTrigger>
 					<TooltipContent>Filter</TooltipContent>
 				</Tooltip>
+
+				<LayoutSaveButton
+					isDirty={isDirty}
+					onSave={saveLayout}
+					onReset={resetLayout}
+				/>
 
 				<div
 					className="w-px h-5 bg-white/10 mx-1"
