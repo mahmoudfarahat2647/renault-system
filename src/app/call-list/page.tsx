@@ -56,7 +56,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function CallListPage() {
-	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("call-list");
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("call-list");
 	const { data: callRowData = [] } = useOrdersQuery("call");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
@@ -228,7 +228,8 @@ export default function CallListPage() {
 						<LayoutSaveButton
 							isDirty={isDirty}
 							onSave={saveLayout}
-							onReset={resetLayout}
+					onSaveAsDefault={saveAsDefault}
+	onReset={resetLayout}
 						/>
 
 						<Tooltip>

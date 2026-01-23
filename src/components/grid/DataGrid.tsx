@@ -75,6 +75,7 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	}, [gridStateKey, getGridState]);
 
 	const setLayoutDirty = useAppStore((state) => state.setLayoutDirty);
+	const gridInitializedRef = useRef(false);
 
 	const handleSaveState = useCallback(() => {
 		if (gridStateKey && gridApiRef.current) {
@@ -94,7 +95,8 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 	}, [gridStateKey, saveGridState, gridApiRef]);
 
 	const handleLayoutChange = useCallback(() => {
-		if (gridStateKey) {
+		// Only mark as dirty if the grid has been initialized (avoid false positive on initial load)
+		if (gridStateKey && gridInitializedRef.current) {
 			setLayoutDirty(gridStateKey, true);
 		}
 		handleSaveState();
@@ -106,6 +108,11 @@ function DataGridInner<T extends { id?: string; vin?: string }>({
 		(params: GridReadyEvent) => {
 			// Call external onGridReady if provided
 			handleGridReady(params);
+
+			// Mark grid as initialized after a short delay to ensure restoration is complete
+			setTimeout(() => {
+				gridInitializedRef.current = true;
+			}, 100);
 		},
 		[handleGridReady],
 	);

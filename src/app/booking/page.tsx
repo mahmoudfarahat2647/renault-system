@@ -59,7 +59,7 @@ import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
 
 export default function BookingPage() {
-	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("booking");
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("booking");
 	const { data: bookingRowData = [] } = useOrdersQuery("booking");
 	const bulkUpdateStageMutation = useBulkUpdateOrderStageMutation();
 	const deleteOrderMutation = useDeleteOrderMutation();
@@ -235,6 +235,7 @@ export default function BookingPage() {
 						<LayoutSaveButton
 							isDirty={isDirty}
 							onSave={saveLayout}
+							onSaveAsDefault={saveAsDefault}
 							onReset={resetLayout}
 						/>
 

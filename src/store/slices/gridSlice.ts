@@ -14,6 +14,11 @@ export interface GridSlice {
     dirtyLayouts: Record<string, boolean>;
 
     /**
+     * Store default layouts for each grid (user-defined defaults).
+     */
+    defaultLayouts: Record<string, GridState>;
+
+    /**
      * Saves the state of a specific grid.
      * @param gridKey Unique identifier for the grid.
      * @param state The current state object from AG Grid api.getState().
@@ -37,6 +42,16 @@ export interface GridSlice {
      * Marks a layout as dirty or clean.
      */
     setLayoutDirty: (gridKey: string, dirty: boolean) => void;
+
+    /**
+     * Saves the current layout as the default for a grid.
+     */
+    saveAsDefaultLayout: (gridKey: string, state: GridState) => void;
+
+    /**
+     * Gets the default layout for a grid.
+     */
+    getDefaultLayout: (gridKey: string) => GridState | null;
 }
 
 export const createGridSlice: StateCreator<
@@ -47,6 +62,7 @@ export const createGridSlice: StateCreator<
 > = (set, get) => ({
     gridStates: {},
     dirtyLayouts: {},
+    defaultLayouts: {},
 
     saveGridState: (gridKey, state) => {
         set((prev) => ({
@@ -81,5 +97,18 @@ export const createGridSlice: StateCreator<
                 [gridKey]: dirty,
             },
         }));
+    },
+
+    saveAsDefaultLayout: (gridKey, state) => {
+        set((prev) => ({
+            defaultLayouts: {
+                ...prev.defaultLayouts,
+                [gridKey]: state,
+            },
+        }));
+    },
+
+    getDefaultLayout: (gridKey) => {
+        return get().defaultLayouts[gridKey] || null;
     },
 });

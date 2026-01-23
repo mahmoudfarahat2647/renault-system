@@ -31,6 +31,7 @@ import {
 interface LayoutSaveButtonProps {
     isDirty: boolean;
     onSave: () => void;
+    onSaveAsDefault: () => void;
     onReset: () => void;
     className?: string;
 }
@@ -38,20 +39,28 @@ interface LayoutSaveButtonProps {
 export function LayoutSaveButton({
     isDirty,
     onSave,
+    onSaveAsDefault,
     onReset,
     className,
 }: LayoutSaveButtonProps) {
     const [showConfirm, setShowConfirm] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const handleConfirmSave = () => {
         onSave();
         setShowConfirm(false);
+        setDropdownOpen(false);
+    };
+
+    const handleOpenConfirm = () => {
+        setShowConfirm(true);
+        setDropdownOpen(false);
     };
 
     return (
         <div className={cn("flex items-center gap-1", className)}>
-            <Popover open={showConfirm} onOpenChange={setShowConfirm}>
-                <DropdownMenu>
+            <Popover open={showConfirm} onOpenChange={setShowConfirm} modal>
+                <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                     <Tooltip>
                         <DropdownMenuTrigger asChild>
                             <TooltipTrigger asChild>
@@ -76,7 +85,7 @@ export function LayoutSaveButton({
                                 disabled={!isDirty}
                                 onSelect={(e) => {
                                     e.preventDefault();
-                                    if (isDirty) setShowConfirm(true);
+                                    if (isDirty) handleOpenConfirm();
                                 }}
                             >
                                 <Save className="h-3.5 w-3.5 text-renault" />
@@ -84,8 +93,24 @@ export function LayoutSaveButton({
                             </DropdownMenuItem>
                         </PopoverTrigger>
                         <DropdownMenuItem
+                            className="flex items-center gap-2 focus:bg-white/5 cursor-pointer text-blue-400 focus:text-blue-300 disabled:opacity-50"
+                            disabled={!isDirty}
+                            onClick={() => {
+                                if (isDirty) {
+                                    onSaveAsDefault();
+                                    setDropdownOpen(false);
+                                }
+                            }}
+                        >
+                            <Check className="h-3.5 w-3.5" />
+                            <span className="text-xs">Save as Default</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                             className="flex items-center gap-2 focus:bg-white/5 cursor-pointer text-red-400 focus:text-red-300"
-                            onClick={onReset}
+                            onClick={() => {
+                                onReset();
+                                setDropdownOpen(false);
+                            }}
                         >
                             <RotateCcw className="h-3.5 w-3.5" />
                             <span className="text-xs">Reset to Default</span>
@@ -103,7 +128,7 @@ export function LayoutSaveButton({
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
                             <p className="text-xs text-gray-400">
-                                Are you sure you want to save this column arrangement as your default for this tab?
+                                Are you sure you want to save this column arrangement for this session?
                             </p>
                         </CardContent>
                         <CardFooter className="p-3 pt-0 flex justify-end gap-2">

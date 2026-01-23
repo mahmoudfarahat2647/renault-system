@@ -73,7 +73,7 @@ export const OrdersToolbar = ({
 	onCallList,
 	rowData = [],
 }: OrdersToolbarProps) => {
-	const { isDirty, saveLayout, resetLayout } = useColumnLayoutTracker("orders");
+	const { isDirty, saveLayout, saveAsDefault, resetLayout } = useColumnLayoutTracker("orders");
 	const uniqueVins = new Set(selectedRows.map((r) => r.vin).filter(Boolean));
 	const isSingleVin = selectedRows.length > 0 && uniqueVins.size === 1;
 
@@ -262,7 +262,8 @@ export const OrdersToolbar = ({
 				<LayoutSaveButton
 					isDirty={isDirty}
 					onSave={saveLayout}
-					onReset={resetLayout}
+					onSaveAsDefault={saveAsDefault}
+	onReset={resetLayout}
 				/>
 
 				<div
