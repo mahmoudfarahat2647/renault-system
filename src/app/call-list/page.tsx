@@ -134,11 +134,20 @@ export default function CallListPage() {
 		status?: string,
 	) => {
 		for (const row of selectedRows) {
+			let newActionNote = row.actionNote || "";
+			if (note && note.trim()) {
+				const taggedNote = `${note.trim()} #booking`;
+				newActionNote = newActionNote
+					? `${newActionNote}\n${taggedNote}`
+					: taggedNote;
+			}
+
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
+					actionNote: newActionNote,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
@@ -157,10 +166,16 @@ export default function CallListPage() {
 		// Send to Orders stage with status and note
 		// 1. Update status/note first (optimistic)
 		for (const row of selectedRows) {
+			let newActionNote = row.actionNote || "";
+			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
+			newActionNote = newActionNote
+				? `${newActionNote}\n${taggedNote}`
+				: taggedNote;
+
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: `Reorder Reason: ${reorderReason}`,
+					actionNote: newActionNote,
 					status: "Reorder",
 				},
 				stage: "call",

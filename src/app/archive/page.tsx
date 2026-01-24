@@ -76,14 +76,23 @@ export default function ArchivePage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
+				const row = archiveRowData.find((r) => r.id === id);
+				let newActionNote = row?.actionNote || "";
+				if (reason && reason.trim()) {
+					const taggedNote = `${reason.trim()} #archive`;
+					newActionNote = newActionNote
+						? `${newActionNote}\n${taggedNote}`
+						: taggedNote;
+				}
+
 				saveOrderMutation.mutate({
 					id,
-					updates: { archiveReason: reason },
+					updates: { archiveReason: reason, actionNote: newActionNote },
 					stage: "archive",
 				});
 			}
 		},
-		[saveOrderMutation],
+		[saveOrderMutation, archiveRowData],
 	);
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
@@ -115,10 +124,16 @@ export default function ArchivePage() {
 
 		// 2. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
+			let newActionNote = row.actionNote || "";
+			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
+			newActionNote = newActionNote
+				? `${newActionNote}\n${taggedNote}`
+				: taggedNote;
+
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: `Reorder Reason: ${reorderReason}`,
+					actionNote: newActionNote,
 					status: "Reorder",
 				},
 				stage: "orders",

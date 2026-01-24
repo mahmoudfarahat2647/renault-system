@@ -143,10 +143,16 @@ export default function BookingPage() {
 		const ids = selectedRows.map((r) => r.id);
 		// 1. Update status/note (sequential but optimistic)
 		for (const row of selectedRows) {
+			let newActionNote = row.actionNote || "";
+			const taggedNote = `Reorder Reason: ${reorderReason} #reorder`;
+			newActionNote = newActionNote
+				? `${newActionNote}\n${taggedNote}`
+				: taggedNote;
+
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
-					actionNote: `Reorder Reason: ${reorderReason}`,
+					actionNote: newActionNote,
 					status: "Reorder",
 				},
 				stage: "booking",
@@ -171,15 +177,25 @@ export default function BookingPage() {
 		for (const row of selectedRows) {
 			const oldDate = row.bookingDate || "Unknown Date";
 			const historyLog = `Rescheduled from ${oldDate} to ${newDate}.`;
-			const updatedNote = row.bookingNote
-				? `${row.bookingNote}\n[System]: ${historyLog} ${newNote}`
-				: `[System]: ${historyLog} ${newNote}`;
+			const fullNote = `${historyLog} ${newNote}`.trim();
+
+			const updatedBookingNote = row.bookingNote
+				? `${row.bookingNote}\n[System]: ${fullNote}`
+				: `[System]: ${fullNote}`;
+
+			// Append to actionNote for history
+			let newActionNote = row.actionNote || "";
+			const taggedNote = `${fullNote} #rebooking`;
+			newActionNote = newActionNote
+				? `${newActionNote}\n${taggedNote}`
+				: taggedNote;
 
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
 					bookingDate: newDate,
-					bookingNote: updatedNote.trim(),
+					bookingNote: updatedBookingNote,
+					actionNote: newActionNote,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",

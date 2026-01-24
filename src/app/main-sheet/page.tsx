@@ -63,14 +63,23 @@ export default function MainSheetPage() {
 	const handleSendToArchive = useCallback(
 		(ids: string[], reason: string) => {
 			for (const id of ids) {
+				const row = rowData.find((r) => r.id === id);
+				let newActionNote = row?.actionNote || "";
+				if (reason && reason.trim()) {
+					const taggedNote = `${reason.trim()} #archive`;
+					newActionNote = newActionNote
+						? `${newActionNote}\n${taggedNote}`
+						: taggedNote;
+				}
+
 				saveOrderMutation.mutate({
 					id,
-					updates: { archiveReason: reason },
+					updates: { archiveReason: reason, actionNote: newActionNote },
 					stage: "archive",
 				});
 			}
 		},
-		[saveOrderMutation],
+		[saveOrderMutation, rowData],
 	);
 
 	const [isSheetLocked, setIsSheetLocked] = useState(true);
@@ -167,11 +176,20 @@ export default function MainSheetPage() {
 	) => {
 		for (const row of selectedRows) {
 			// Update stage and save booking details
+			let newActionNote = row.actionNote || "";
+			if (note && note.trim()) {
+				const taggedNote = `${note.trim()} #booking`;
+				newActionNote = newActionNote
+					? `${newActionNote}\n${taggedNote}`
+					: taggedNote;
+			}
+
 			await saveOrderMutation.mutateAsync({
 				id: row.id,
 				updates: {
 					bookingDate: date,
 					bookingNote: note,
+					actionNote: newActionNote,
 					...(status ? { bookingStatus: status } : {}),
 				},
 				stage: "booking",
