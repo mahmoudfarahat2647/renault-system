@@ -339,41 +339,7 @@ export default function BookingPage() {
 							<TooltipContent>Reorder</TooltipContent>
 						</Tooltip>
 
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									className={cn(
-										"border-none rounded-md h-8 w-8 transition-all duration-300",
-										selectedRows.length > 0 &&
-											new Set(selectedRows.map((r) => r.vin)).size === 1
-											? "bg-renault-yellow hover:bg-renault-yellow/90 text-black shadow-[0_0_15px_rgba(255,206,0,0.2)]"
-											: "bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300",
-									)}
-									size="icon"
-									onClick={() => {
-										setRebookingSearchTerm(
-											selectedRows[0]?.vin ||
-											selectedRows[0]?.customerName ||
-											"",
-										);
-										setIsRebookingModalOpen(true);
-									}}
-									disabled={
-										selectedRows.length > 0 &&
-										new Set(selectedRows.map((r) => r.vin)).size > 1
-									}
-								>
-									{selectedRows.length === 0 ? (
-										<HistoryIcon className="h-4 w-4" />
-									) : (
-										<Calendar className="h-4 w-4" />
-									)}
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								{selectedRows.length === 0 ? "History" : "Rebooking"}
-							</TooltipContent>
-						</Tooltip>
+
 					</div>
 
 					<div className="flex items-center gap-1.5">

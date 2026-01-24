@@ -56,55 +56,7 @@ export const BookingSidebarHeader = ({
 						{selectedRows.length} Items • {selectedRows[0]?.customerName}
 					</h3>
 				</div>
-				<Popover>
-					<PopoverTrigger asChild>
-						<button
-							type="button"
-							className={cn(
-								"h-6 px-2 text-[10px] font-bold uppercase tracking-wider rounded border transition-colors flex items-center gap-1.5",
-								preBookingStatus
-									? "bg-white/10 border-white/20 text-white"
-									: "bg-transparent border-dashed border-gray-700 text-gray-600 hover:text-gray-400",
-							)}
-						>
-							<div
-								className={cn(
-									"w-1.5 h-1.5 rounded-full",
-									preBookingStatus ? "bg-renault-yellow" : "bg-gray-700",
-								)}
-							/>
-							{preBookingStatus || "Set Status"}
-							<ChevronRight className="h-3 w-3 opacity-50" />
-						</button>
-					</PopoverTrigger>
-					<PopoverContent
-						align="end"
-						side="bottom"
-						className="w-48 p-1 bg-[#0f0f11] border-white/10"
-					>
-						<div className="space-y-0.5">
-							{bookingStatuses.map((status) => (
-								<button
-									type="button"
-									key={status.label}
-									onClick={() => setPreBookingStatus(status.label)}
-									className={cn(
-										"w-full text-left px-3 py-2 text-xs font-medium rounded hover:bg-white/5 flex items-center gap-2",
-										preBookingStatus === status.label
-											? "text-renault-yellow bg-white/5"
-											: "text-gray-400",
-									)}
-								>
-									<div
-										className="w-2 h-2 rounded-full"
-										style={{ backgroundColor: status.color }}
-									/>
-									{status.label}
-								</button>
-							))}
-						</div>
-					</PopoverContent>
-				</Popover>
+
 			</div>
 			<div className="relative">
 				<MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-indigo-500/50 pointer-events-none" />
