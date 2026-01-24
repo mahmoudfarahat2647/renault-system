@@ -26,7 +26,6 @@ export const Header = React.memo(function Header() {
 	const router = useRouter();
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-	const _commits = useAppStore((state) => state.commits);
 	const undoStack = useAppStore((state) => state.undoStack);
 	const redoStack = useAppStore((state) => state.redoStack);
 	const undo = useAppStore((state) => state.undo);

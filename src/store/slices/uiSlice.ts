@@ -17,6 +17,13 @@ const defaultPartStatuses = [
 	{ id: "issue", label: "Has Issue", color: "#ef4444" },
 ];
 
+const defaultBookingStatuses = [
+	{ id: "confirmed", label: "Confirmed", color: "#10b981" },
+	{ id: "pending", label: "Pending", color: "#facc15" },
+	{ id: "cancelled", label: "Cancelled", color: "#ef4444" },
+	{ id: "completed", label: "Completed", color: "#3b82f6" },
+];
+
 const initialState: UIState = {
 	searchTerm: "",
 	highlightedRowId: null,
@@ -36,6 +43,7 @@ const initialState: UIState = {
 	todos: [],
 	notes: [],
 	partStatuses: defaultPartStatuses,
+	bookingStatuses: defaultBookingStatuses,
 	isLocked: true,
 	beastModeTriggers: {},
 };

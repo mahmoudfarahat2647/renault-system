@@ -44,7 +44,6 @@ export const useAppStore = create<CombinedStore>()(
 				isLocked: state.isLocked,
 				notes: state.notes,
 				todos: state.todos,
-				commits: state.commits,
 				gridStates: state.gridStates,
 			}),
 		},

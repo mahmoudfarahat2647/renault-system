@@ -9,7 +9,6 @@ export const createBookingSlice: StateCreator<
 	BookingState & BookingActions
 > = (set, get) => ({
 	bookingRowData: [],
-	bookingRowData: [],
 
 	/**
 	 * Moves rows from various source lists (Main, Orders, Call) to the Booking list.

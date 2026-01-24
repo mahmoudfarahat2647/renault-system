@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { PendingRow } from "@/types";
+import { useAppStore } from "@/store/useStore";
 import { BookingCalendarGrid } from "../booking/BookingCalendarGrid";
 import { BookingTasks } from "../booking/BookingTasks";
 import { BookingSidebarCustomerList } from "../booking/BookingSidebarCustomerList";
@@ -35,6 +36,7 @@ export const BookingCalendarModal = ({
 	initialSearchTerm = "",
 	bookingOnly = false,
 }: BookingCalendarModalProps) => {
+	const bookingStatuses = useAppStore((state) => state.bookingStatuses);
 	const {
 		currentMonth,
 		setCurrentMonth,
@@ -85,8 +87,6 @@ export const BookingCalendarModal = ({
 							searchQuery={searchQuery}
 							searchMatchDates={searchMatchDates}
 							activeCustomerDateSet={new Set(activeCustomerHistoryDates)}
-							previewBookings={selectedRows}
-							previewStatus={preBookingStatus}
 						/>
 
 						<BookingTasks />
@@ -108,6 +108,9 @@ export const BookingCalendarModal = ({
 							<div className="flex-1 bg-[#0a0a0b] flex flex-col w-[360px] max-w-[360px]">
 								<BookingSidebarHeader
 									selectedRows={selectedRows}
+									preBookingStatus={preBookingStatus}
+									setPreBookingStatus={setPreBookingStatus}
+									bookingStatuses={bookingStatuses}
 									bookingNote={bookingNote}
 									setBookingNote={setBookingNote}
 									onClose={() => onOpenChange(false)}

@@ -79,6 +79,7 @@ export interface UIState {
 	todos: TodoItem[];
 	notes: StickyNote[];
 	partStatuses: PartStatusDef[];
+	bookingStatuses: PartStatusDef[];
 	isLocked: boolean;
 	beastModeTriggers: Record<string, number>;
 }

@@ -75,7 +75,6 @@ export const BookingSidebar = ({
 				selectedRows={selectedRows}
 				activeCustomerBookings={activeCustomerBookings}
 				consolidatedNotes={consolidatedNotes}
-				bookingStatuses={bookingStatuses}
 				updateBookingStatus={updateBookingStatus}
 				activeCustomerHistoryDates={activeCustomerHistoryDates}
 				onHistoryDateClick={onHistoryDateClick}
