@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 /**
  * Guards the icon-package build optimizations wired up in next.config.ts
  * (MAH-46). We assert against the raw source rather than importing the module,
- * because the default export is wrapped in withSentryConfig which runs side
- * effects at import time in the Vitest/node env.
+ * because next.config.ts is authored as an ESM/TS module intended for the
+ * Next.js build pipeline, not for direct import in the Vitest/node env.
  */
 const configSource = readFileSync(
 	join(process.cwd(), "next.config.ts"),
