@@ -11,8 +11,7 @@ import {
 	Tag,
 	Trash2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useMemo, useState } from "react";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -46,7 +45,6 @@ import {
 } from "@/components/ui/tooltip";
 import {
 	filterReservedRows,
-	getSelectedIds,
 	hasMixedVinSelection,
 } from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
@@ -56,15 +54,11 @@ import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
 import { useSelectedRowsSync } from "@/hooks/useSelectedRowsSync";
 import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
-import {
-	buildRebookingCommands,
-	buildReorderCommands,
-	buildSendToArchiveCommands,
-} from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { useBookingPageActions } from "./useBookingPageActions";
 
 export default function BookingPage() {
 	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
@@ -97,36 +91,21 @@ export default function BookingPage() {
 	const partStatuses = useAppStore((state) => state.partStatuses);
 	const gridEditPermission = useAppStore((s) => s.gridEditPermission);
 
-	const handleUpdateOrder = useCallback(
-		(id: string, updates: Partial<PendingRow>) => {
-			applyCommand({
-				type: "patchRow",
-				id,
-				sourceStage: "booking",
-				destinationStage: "booking",
-				updates,
-				previousValues: {},
-			});
-			return Promise.resolve();
-		},
-		[applyCommand],
-	);
-
-	const handleSendToArchive = useCallback(
-		(ids: string[], reason: string) => {
-			const rows = ids.flatMap((id) => {
-				const row = effectiveBookingData.find((r: PendingRow) => r.id === id);
-				return row ? [row] : [];
-			});
-			for (const cmd of buildSendToArchiveCommands(rows, reason, "booking")) {
-				applyCommand(cmd);
-			}
-		},
-		[effectiveBookingData, applyCommand],
-	);
-
 	const [gridApi, setGridApi] = useState<GridApi | null>(null);
 	const [selectedRows, setSelectedRows] = useState<PendingRow[]>([]);
+	const {
+		handleUpdateOrder,
+		handleSendToArchive,
+		handleConfirmReorder,
+		handleConfirmRebooking,
+		handleUpdatePartStatus,
+		handleConfirmDelete,
+	} = useBookingPageActions({
+		applyCommand,
+		effectiveRows: effectiveBookingData,
+		selectedRows,
+		setSelectedRows,
+	});
 	const { onSelectAllByVin, isSelectAllByVinDisabled } = useSelectAllByVin(
 		selectedRows,
 		gridApi,
@@ -192,53 +171,6 @@ export default function BookingPage() {
 			),
 		[partStatuses, handleNoteClick, handleReminderClick, handleAttachClick],
 	);
-
-	const handleConfirmReorder = async () => {
-		if (!reorderReason.trim()) {
-			toast.error("Please provide a reason for reorder");
-			return;
-		}
-		for (const cmd of buildReorderCommands(
-			selectedRows,
-			"booking",
-			reorderReason,
-		)) {
-			applyCommand(cmd);
-		}
-		setSelectedRows([]);
-		setIsReorderModalOpen(false);
-		setReorderReason("");
-		toast.success(
-			`${selectedRows.length} row(s) sent back to Orders (Reorder)`,
-		);
-	};
-
-	const handleConfirmRebooking = async (
-		newDate: string,
-		newNote: string,
-		status?: string,
-	) => {
-		if (selectedRows.length === 0) return;
-		for (const cmd of buildRebookingCommands(
-			selectedRows,
-			newDate,
-			newNote,
-			status,
-		)) {
-			applyCommand(cmd);
-		}
-		setIsRebookingModalOpen(false);
-		setSelectedRows([]);
-		toast.success(`Rescheduled ${selectedRows.length} booking(s) successfully`);
-	};
-
-	const handleUpdatePartStatus = (status: string) => {
-		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => {
-			handleUpdateOrder(row.id, { status });
-		});
-		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
-	};
 
 	return (
 		<div className="space-y-4 h-full flex flex-col">
@@ -519,7 +451,12 @@ export default function BookingPage() {
 						</Button>
 						<Button
 							variant="renault"
-							onClick={handleConfirmReorder}
+							onClick={() =>
+								handleConfirmReorder(reorderReason, () => {
+									setIsReorderModalOpen(false);
+									setReorderReason("");
+								})
+							}
 							disabled={!reorderReason.trim()}
 						>
 							Confirm Reorder
@@ -532,7 +469,11 @@ export default function BookingPage() {
 				open={isRebookingModalOpen}
 				onOpenChange={setIsRebookingModalOpen}
 				selectedRows={selectedRows}
-				onConfirm={handleConfirmRebooking}
+				onConfirm={(date, note, status) =>
+					handleConfirmRebooking(date, note, status, () =>
+						setIsRebookingModalOpen(false),
+					)
+				}
 			/>
 
 			<RowModals
@@ -550,14 +491,7 @@ export default function BookingPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={async () => {
-					const ids = getSelectedIds(selectedRows);
-					applyCommand({
-						type: "deleteRows",
-						ids,
-					});
-					setSelectedRows([]);
-					toast.success("Booking(s) deleted");
-					setShowDeleteConfirm(false);
+					await handleConfirmDelete(() => setShowDeleteConfirm(false));
 				}}
 				title="Delete Bookings"
 				description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
