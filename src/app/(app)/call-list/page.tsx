@@ -1,55 +1,17 @@
 "use client";
 
 import type { GridApi } from "ag-grid-community";
-import {
-	Archive,
-	Calendar,
-	CheckCircle,
-	Download,
-	Filter,
-	RotateCcw,
-	Tag,
-	Trash2,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useMemo, useState } from "react";
+import { CallListToolbar } from "@/components/call-list/CallListToolbar";
 import { DynamicDataGrid as DataGrid } from "@/components/grid";
 import { BookingCalendarModal } from "@/components/shared/BookingCalendarModal";
-import { CallCustomerCounter } from "@/components/shared/CallCustomerCounter";
-import { CallRepairSystemFilter } from "@/components/shared/CallRepairSystemFilter";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { getCallColumns } from "@/components/shared/GridConfig";
 import { InfoLabel } from "@/components/shared/InfoLabel";
-import { LayoutSaveButton } from "@/components/shared/LayoutSaveButton";
+import { ReorderReasonDialog } from "@/components/shared/ReorderReasonDialog";
 import { RowModals } from "@/components/shared/RowModals";
-import { SelectAllByVinButton } from "@/components/shared/SelectAllByVinButton";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-	filterReservedRows,
-	getSelectedIds,
-} from "@/domain/order/orderWorkflow";
+import { filterReservedRows } from "@/domain/order/orderWorkflow";
 import { useOrdersQuery } from "@/hooks/queries/useOrdersQuery";
-import { useColumnLayoutTracker } from "@/hooks/useColumnLayoutTracker";
 import { useDraftSession } from "@/hooks/useDraftSession";
 import { useRowModals } from "@/hooks/useRowModals";
 import { useSelectAllByVin } from "@/hooks/useSelectAllByVin";
@@ -58,20 +20,13 @@ import {
 	filterRowsByRepairSystems,
 	getRepairSystemFilterOptions,
 } from "@/lib/callRepairSystemFilter";
-import {
-	buildBookingCommands,
-	buildReorderCommands,
-	buildSendToArchiveCommands,
-} from "@/lib/orderStageTransitions";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
-import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { useCallListModals } from "./useCallListModals";
+import { useCallListPageActions } from "./useCallListPageActions";
 
 export default function CallListPage() {
-	const { isDirty, isPositionDirty, saveLayout, saveAsDefault, resetLayout } =
-		useColumnLayoutTracker("call-list");
-	const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 	const { data: callRowData = [] } = useOrdersQuery("call");
 
 	// Draft session for undo/redo
@@ -102,9 +57,21 @@ export default function CallListPage() {
 		selectedRows,
 		gridApi,
 	);
-	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
-	const [reorderReason, setReorderReason] = useState("");
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const {
+		isReorderModalOpen,
+		setReorderModalOpen,
+		openReorder,
+		closeReorder,
+		reorderReason,
+		setReorderReason,
+		resetReorder,
+		isBookingModalOpen,
+		setBookingModalOpen,
+		openBooking,
+		showDeleteConfirm,
+		setShowDeleteConfirm,
+		openDeleteConfirm,
+	} = useCallListModals();
 	const [showFilters, setShowFilters] = useState(false);
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
 		"vertical",
@@ -141,33 +108,20 @@ export default function CallListPage() {
 		setSelectedRows,
 	);
 
-	const handleUpdateOrder = useCallback(
-		(id: string, updates: Partial<PendingRow>) => {
-			applyCommand({
-				type: "patchRow",
-				id,
-				sourceStage: "call",
-				destinationStage: "call",
-				updates,
-				previousValues: {},
-			});
-			return Promise.resolve();
-		},
-		[applyCommand],
-	);
-
-	const handleSendToArchive = useCallback(
-		(ids: string[], reason: string) => {
-			const rows = ids.flatMap((id) => {
-				const row = effectiveData.find((r: PendingRow) => r.id === id);
-				return row ? [row] : [];
-			});
-			for (const cmd of buildSendToArchiveCommands(rows, reason, "call")) {
-				applyCommand(cmd);
-			}
-		},
-		[effectiveData, applyCommand],
-	);
+	const {
+		handleUpdateOrder,
+		handleSendToArchive,
+		handleConfirmBooking,
+		handleConfirmReorder,
+		handleUpdatePartStatus,
+		handleDelete,
+		handleConfirmDelete,
+	} = useCallListPageActions({
+		applyCommand,
+		effectiveRows: effectiveData,
+		selectedRows,
+		setSelectedRows,
+	});
 
 	const {
 		activeModal,
@@ -192,251 +146,37 @@ export default function CallListPage() {
 		);
 	}, [partStatuses, handleNoteClick, handleReminderClick, handleAttachClick]);
 
-	const handleConfirmBooking = async (
-		date: string,
-		note: string,
-		status?: string,
-	) => {
-		for (const cmd of buildBookingCommands(
-			selectedRows,
-			"call",
-			date,
-			note,
-			status,
-		)) {
-			applyCommand(cmd);
-		}
-		setSelectedRows([]);
-		toast.success(`${selectedRows.length} row(s) sent to Booking`);
-	};
-
-	const handleConfirmReorder = async () => {
-		if (!reorderReason.trim()) {
-			toast.error("Please provide a reason for reorder");
-			return;
-		}
-		for (const cmd of buildReorderCommands(
-			selectedRows,
-			"call",
-			reorderReason,
-		)) {
-			applyCommand(cmd);
-		}
-		setSelectedRows([]);
-		setIsReorderModalOpen(false);
-		setReorderReason("");
-		toast.success(
-			`${selectedRows.length} row(s) sent back to Orders (Reorder)`,
-		);
-	};
-
-	const handleUpdatePartStatus = (status: string) => {
-		if (selectedRows.length === 0) return;
-		selectedRows.forEach((row) => {
-			handleUpdateOrder(row.id, { status });
-		});
-		toast.success(`Updated ${selectedRows.length} item(s) to ${status}`);
-	};
-
-	const handleDelete = () => {
-		if (selectedRows.length === 0) {
-			toast.error("Please select at least one row");
-			return;
-		}
-		setShowDeleteConfirm(true);
-	};
-
 	return (
 		<div className="space-y-4 h-full flex flex-col">
 			<InfoLabel data={selectedRows[0] || null} />
 
-			<div className="flex items-center justify-between bg-[#141416] p-1.5 rounded-lg border border-white/5">
-				<div className="flex items-center gap-1.5">
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								className="bg-[#1c1c1e] hover:bg-[#2c2c2e] text-gray-300 border-none rounded-md h-8 w-8"
-								onClick={() => gridApi?.exportDataAsCsv()}
-							>
-								<Download className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Extract</TooltipContent>
-					</Tooltip>
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-gray-400 hover:text-white h-8 w-8"
-								onClick={() => setShowFilters(!showFilters)}
-							>
-								<Filter className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Filter</TooltipContent>
-					</Tooltip>
-
-					<LayoutSaveButton
-						isDirty={isDirty}
-						isPositionDirty={isPositionDirty}
-						onSave={saveLayout}
-						onSaveAsDefault={saveAsDefault}
-						onReset={resetLayout}
-					/>
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-gray-400 hover:text-white h-8 w-8"
-								onClick={() => {
-									const reservedRows = filterReservedRows(
-										selectedRows,
-										partStatuses,
-									);
-									if (reservedRows.length === 0) return;
-									printReservationLabels(reservedRows);
-								}}
-								disabled={selectedRows.length === 0}
-							>
-								<Tag className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Reserve/Print Label</TooltipContent>
-					</Tooltip>
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="text-gray-400 hover:text-white h-8 w-8"
-										disabled={selectedRows.length === 0}
-									>
-										<CheckCircle className="h-4 w-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="end"
-									className="bg-[#1c1c1e] border-white/10 text-white min-w-[160px]"
-								>
-									{partStatuses?.map((status) => {
-										const isHex =
-											status.color?.startsWith("#") ||
-											status.color?.startsWith("rgb");
-										const dotStyle = isHex
-											? { backgroundColor: status.color }
-											: undefined;
-										const colorClass = isHex ? "" : status.color;
-
-										return (
-											<DropdownMenuItem
-												key={status.id}
-												onClick={() => handleUpdatePartStatus(status.label)}
-												className="flex items-center gap-2 focus:bg-white/5 cursor-pointer"
-											>
-												<div
-													className={cn("w-2 h-2 rounded-full", colorClass)}
-													style={dotStyle}
-												/>
-												<span className="text-xs">{status.label}</span>
-											</DropdownMenuItem>
-										);
-									})}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</TooltipTrigger>
-						<TooltipContent>Update Status</TooltipContent>
-					</Tooltip>
-
-					<div className="w-px h-5 bg-white/10 mx-1" />
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-green-500/80 hover:text-green-500 h-8 w-8"
-								disabled={selectedRows.length === 0}
-								onClick={() => setIsBookingModalOpen(true)}
-							>
-								<Calendar className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Send to Booking</TooltipContent>
-					</Tooltip>
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-orange-500/80 hover:text-orange-500 h-8 w-8"
-								disabled={selectedRows.length === 0}
-								onClick={() => setIsReorderModalOpen(true)}
-							>
-								<RotateCcw className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Send to Reorder</TooltipContent>
-					</Tooltip>
-
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-gray-400 hover:text-white h-8 w-8"
-								disabled={selectedRows.length === 0}
-								onClick={() =>
-									handleArchiveClick(
-										selectedRows[0],
-										selectedRows.map((r) => r.id),
-									)
-								}
-							>
-								<Archive className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Archive</TooltipContent>
-					</Tooltip>
-
-					<CallRepairSystemFilter
-						options={repairSystemOptions}
-						value={selectedRepairSystems}
-						onChange={setSelectedRepairSystems}
-					/>
-				</div>
-
-				<div className="flex items-center gap-1.5">
-					<SelectAllByVinButton
-						onSelectAllByVin={onSelectAllByVin}
-						isDisabled={isSelectAllByVinDisabled}
-					/>
-					<CallCustomerCounter rows={filteredEffectiveData} />
-					<div className="w-px h-5 bg-white/10 mx-1" />
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-red-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
-								onClick={handleDelete}
-								disabled={selectedRows.length === 0}
-							>
-								<Trash2 className="h-3.5 w-3.5" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>Delete</TooltipContent>
-					</Tooltip>
-				</div>
-			</div>
+			<CallListToolbar
+				selectedRows={selectedRows}
+				partStatuses={partStatuses}
+				rowData={filteredEffectiveData}
+				repairSystemOptions={repairSystemOptions}
+				selectedRepairSystems={selectedRepairSystems}
+				onRepairSystemsChange={setSelectedRepairSystems}
+				onExtract={() => gridApi?.exportDataAsCsv()}
+				onFilterToggle={() => setShowFilters(!showFilters)}
+				onReserve={() => {
+					const reservedRows = filterReservedRows(selectedRows, partStatuses);
+					if (reservedRows.length === 0) return;
+					printReservationLabels(reservedRows);
+				}}
+				onUpdateStatus={handleUpdatePartStatus}
+				onSendToBooking={openBooking}
+				onReorder={openReorder}
+				onArchive={() =>
+					handleArchiveClick(
+						selectedRows[0],
+						selectedRows.map((r) => r.id),
+					)
+				}
+				onDelete={() => handleDelete(() => openDeleteConfirm())}
+				onSelectAllByVin={onSelectAllByVin}
+				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
+			/>
 
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: outer wrapper captures contextmenu events; AG Grid owns all real a11y/focus management */}
 			<div
@@ -484,49 +224,20 @@ export default function CallListPage() {
 				/>
 			</div>
 
-			<Dialog open={isReorderModalOpen} onOpenChange={setIsReorderModalOpen}>
-				<DialogContent className="bg-[#1c1c1e] border border-white/10 text-white">
-					<DialogHeader>
-						<DialogTitle className="text-orange-500">
-							Reorder - Reason Required
-						</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-4">
-						<div>
-							<Label>Reason for Reorder</Label>
-							<Input
-								value={reorderReason}
-								onChange={(e) => setReorderReason(e.target.value)}
-								placeholder="e.g., Wrong part, Customer cancelled"
-								className="bg-white/5 border-white/10 text-white"
-							/>
-						</div>
-						<p className="text-sm text-muted-foreground">
-							This will send the selected items back to the Orders view.
-						</p>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsReorderModalOpen(false)}
-							className="border-white/20 text-white hover:bg-white/10"
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="renault"
-							onClick={handleConfirmReorder}
-							disabled={!reorderReason.trim()}
-						>
-							Confirm Reorder
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<ReorderReasonDialog
+				open={isReorderModalOpen}
+				onOpenChange={setReorderModalOpen}
+				reason={reorderReason}
+				onReasonChange={setReorderReason}
+				onCancel={closeReorder}
+				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
+				placeholder="e.g., Wrong part, Customer cancelled"
+				helperText="This will send the selected items back to the Orders view."
+			/>
 
 			<BookingCalendarModal
 				open={isBookingModalOpen}
-				onOpenChange={setIsBookingModalOpen}
+				onOpenChange={setBookingModalOpen}
 				onConfirm={handleConfirmBooking}
 				selectedRows={selectedRows}
 			/>
@@ -544,14 +255,7 @@ export default function CallListPage() {
 			<ConfirmDialog
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
-				onConfirm={async () => {
-					applyCommand({
-						type: "deleteRows",
-						ids: getSelectedIds(selectedRows),
-					});
-					setSelectedRows([]);
-					toast.success("Row(s) deleted");
-				}}
+				onConfirm={handleConfirmDelete}
 				title="Delete Records"
 				description={`Are you sure you want to delete ${selectedRows.length} selected record(s)?`}
 				confirmText="Delete"
