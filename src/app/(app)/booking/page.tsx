@@ -23,6 +23,7 @@ import { trySelectRowsByVin } from "@/lib/ag-grid-helpers";
 import { printReservationLabels } from "@/lib/printing/reservationLabels";
 import { useAppStore } from "@/store/useStore";
 import type { PendingRow } from "@/types";
+import { useBookingModals } from "./useBookingModals";
 import { useBookingPageActions } from "./useBookingPageActions";
 
 export default function BookingPage() {
@@ -93,10 +94,23 @@ export default function BookingPage() {
 		effectiveBookingData,
 		setPendingVinSelection,
 	]);
-	const [isReorderModalOpen, setIsReorderModalOpen] = useState(false);
-	const [reorderReason, setReorderReason] = useState("");
-	const [isRebookingModalOpen, setIsRebookingModalOpen] = useState(false);
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const {
+		isReorderModalOpen,
+		setReorderModalOpen,
+		openReorder,
+		closeReorder,
+		reorderReason,
+		setReorderReason,
+		resetReorder,
+		isRebookingModalOpen,
+		setRebookingModalOpen,
+		openRebooking,
+		closeRebooking,
+		showDeleteConfirm,
+		setShowDeleteConfirm,
+		openDeleteConfirm,
+		closeDeleteConfirm,
+	} = useBookingModals();
 	const [showFilters, setShowFilters] = useState(false);
 	const [scrollDir, setScrollDir] = useState<"vertical" | "horizontal">(
 		"vertical",
@@ -161,9 +175,9 @@ export default function BookingPage() {
 						);
 					}
 				}}
-				onRebook={() => setIsRebookingModalOpen(true)}
-				onReorder={() => setIsReorderModalOpen(true)}
-				onDelete={() => setShowDeleteConfirm(true)}
+				onRebook={openRebooking}
+				onReorder={openReorder}
+				onDelete={openDeleteConfirm}
 				onSelectAllByVin={onSelectAllByVin}
 				isSelectAllByVinDisabled={isSelectAllByVinDisabled}
 			/>
@@ -216,16 +230,11 @@ export default function BookingPage() {
 
 			<ReorderReasonDialog
 				open={isReorderModalOpen}
-				onOpenChange={setIsReorderModalOpen}
+				onOpenChange={setReorderModalOpen}
 				reason={reorderReason}
 				onReasonChange={setReorderReason}
-				onCancel={() => setIsReorderModalOpen(false)}
-				onConfirm={() =>
-					handleConfirmReorder(reorderReason, () => {
-						setIsReorderModalOpen(false);
-						setReorderReason("");
-					})
-				}
+				onCancel={closeReorder}
+				onConfirm={() => handleConfirmReorder(reorderReason, resetReorder)}
 				placeholder="e.g., Wrong part, Customer cancelled"
 				helperText="This will send the selected items back to the Orders view."
 				srDescription="Provide a reason why this order is being sent back for reordering."
@@ -233,12 +242,10 @@ export default function BookingPage() {
 
 			<BookingCalendarModal
 				open={isRebookingModalOpen}
-				onOpenChange={setIsRebookingModalOpen}
+				onOpenChange={setRebookingModalOpen}
 				selectedRows={selectedRows}
 				onConfirm={(date, note, status) =>
-					handleConfirmRebooking(date, note, status, () =>
-						setIsRebookingModalOpen(false),
-					)
+					handleConfirmRebooking(date, note, status, closeRebooking)
 				}
 			/>
 
@@ -257,7 +264,7 @@ export default function BookingPage() {
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
 				onConfirm={async () => {
-					await handleConfirmDelete(() => setShowDeleteConfirm(false));
+					await handleConfirmDelete(closeDeleteConfirm);
 				}}
 				title="Delete Bookings"
 				description={`Are you sure you want to delete ${selectedRows.length} selected booking(s)?`}
