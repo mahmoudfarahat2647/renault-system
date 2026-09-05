@@ -95,3 +95,7 @@ action-handler hook **and** all four hooks turn out to differ only by:
 i.e. the builder set, the completion ordering, and the `onComplete`/guard shape are the same across
 all four. Track those three axes explicitly when implementing Main Sheet and Archive. If they still
 diverge at n=4, stay stage-specific permanently.
+
+## n=4 — Archive (#182) resolution
+
+Archive is the fourth and final stage to adopt the four-part extraction shape (action-handler hook `useArchivePageActions`, modal-state hook `useArchiveModals`, `ArchiveToolbar` component, and the shared `ReorderReasonDialog`). It is the fifth workflow stage but the fourth adopter — Orders predates the pattern (`useOrdersPageHandlers`, ~525 LOC). Checking the revisit trigger: the hooks still diverge across all four stages — Archive keeps its own delete toast `"Archived record(s) deleted"` (vs. `"Row(s) deleted"` in Call List / Main Sheet), its own `ConfirmDialog` copy with `title="Delete Archived Records"` and `confirmText="Permanently Delete"`, and has no empty-selection `handleDelete` gate (the delete button is guarded solely by `disabled={selectedRows.length === 0}`). Because the builder set, toast copy, and guard shape continue to differ across all four hooks, the decision per the revisit trigger is: **stay stage-specific permanently**. No shared generic hook will be introduced.
